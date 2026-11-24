@@ -153,7 +153,7 @@
       { k: "نقطة التعادل", v: nf(m.be_orders_day, 1) + " طلب/يوم",
         s: "≈ " + nf(m.be_patients_day, 0) + " مريضاً/يوم", c: beC },
       { k: "صافي القيمة الحالية (22%)", v: usd(m.npv22),
-        s: "36 شهراً · " + (m.irr_annual === null ? "—" : "IRR " + nf(m.irr_annual) + "%"), c: npvC }
+        s: "36 شهراً" + (m.irr_annual === null ? "" : " · IRR " + nf(m.irr_annual) + "%"), c: npvC }
     ];
 
     $("#kpis").innerHTML = cards.map(function (c) {
