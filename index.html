@@ -126,7 +126,7 @@
   <!-- ----------------------------------------------------------- tab: tests -->
   <section data-panel="tests" hidden>
     <div class="note info">
-      عدّل <strong>سعر البيع بالجنيه</strong> أو <strong>تكلفة الكواشف بالدولار</strong> لأي فحص،
+      عدّل <strong>سعر البيع بالدولار</strong> أو <strong>تكلفة الكواشف بالدولار</strong> لأي فحص،
       أو غيّر <strong>حصة الطلب</strong> (كم % من الطلبات يكون هذا الفحص). النتائج تتحدث فوراً.
     </div>
     <div class="card">
@@ -134,20 +134,21 @@
         <h2>قائمة الفحوص <span class="pill" id="menu-count"></span></h2>
         <button class="btn sm primary" data-add="menu">+ فحص جديد</button>
       </div>
-      <p class="sub">السعر بالجنيه السوداني (SDG) · التكلفة بالدولار لكل طلب · الحصة مجموعها يجب أن يقارب 100%</p>
+      <p class="sub">كل الأسعار بالدولار (USD) — السعر والكواشف معاً. سعر الجنيه السوداني يُحسب تلقائياً من سعر الصرف.</p>
       <div id="menu-cards" class="menu-cards"></div>
       <div class="tw only-wide">
         <table class="tbl" id="menu-table">
           <thead>
             <tr>
-              <th>الفحص</th>
-              <th class="num">السعر (جنيه سوداني)</th>
-              <th class="num">التكلفة ($)</th>
-              <th class="num">حصة الطلب</th>
-              <th class="num">مساهمة ($/طلب)</th>
-              <th class="num">هامش</th>
-              <th class="num">دقائق فني</th>
-              <th class="num">طلبات/شهر</th>
+              <th class="c-name">الفحص</th>
+              <th class="num c-price">سعر البيع ($)</th>
+              <th class="num c-sm">الكواشف ($)</th>
+              <th class="num c-sm">حصة الطلب</th>
+              <th class="num c-sm">مساهمة ($)</th>
+              <th class="num c-sm">هامش</th>
+              <th class="num c-sm">دقائق فني</th>
+              <th class="num c-sm">طلبات/شهر</th>
+              <th class="c-del"></th>
             </tr>
           </thead>
           <tbody></tbody>

@@ -13,7 +13,7 @@
 
   var A = {
     fx_sdg: 12000, fx_egp: 54, fx_drift: 0.18, pass_through: 0.9, pass_lag_months: 1,
-    days: 26, price_index: 0.92, tests_per_patient: 1.55, vc_mult: 1, opex_mult: 1,
+    days: 26, price_index: 1, tests_per_patient: 1.55, vc_mult: 1, opex_mult: 1,
     capex_mult: 1, discount: 0.22, tax: 0.17, dep_years_eq: 5, dep_years_it: 3,
     dep_years_fit: 5, phase2_month: 6, phase3_month: 16, terminal_ebitda_x: 12,
     tech_eff: 0.85, shift_min: 480, overhead_min_per_order: 1.3,
@@ -24,24 +24,25 @@
     tpp_bonus_phase3: 0.12
   };
 
-  /* key, label, price_sdg, vc_usd, tech_min, share, phase, note */
+  /* key, label, price_usd, vc_usd, tech_min, share, phase, note
+   * price_usd is what the patient pays, in USD. SDG is derived from it. */
   var MENU = [
-    ["cbc", "صورة دم كاملة CBC (3-part)", 57600, 1.20, 5.0, 0.24, 1, "3 كواشف + QC يومي"],
-    ["chem", "كيمياء – فحص مفرد (يوريا/كرياتينين/حمض بوليك/سكر)", 40800, 0.45, 4.0, 0.24, 1, "كواشف سائلة، معايرة أسبوعية"],
-    ["panel", "باقة كيمياء (10–12 محللاً)", 201600, 2.60, 16.0, 0.07, 1, "أعلى سعر لكل دقيقة فني"],
-    ["hb", "هيموغلوبين Hb", 19200, 0.12, 1.5, 0.04, 1, "Drabkin"],
-    ["esr", "سرعة الترسيب ESR", 38400, 0.20, 5.0, 0.04, 1, "Westergren يدوي"],
-    ["malaria", "شريط/فيلم الملاريا", 38400, 0.75, 8.0, 0.08, 1, "موسمي"],
-    ["urine", "بول عام U.G (شريط + مجهر)", 38400, 0.45, 6.0, 0.06, 1, "شريط 10 بارامتر"],
-    ["stool", "براز عام", 38400, 0.30, 7.0, 0.02, 1, ""],
-    ["serology", "سيرولوجي (Widal/ASO/RF/CRP/VDRL)", 36000, 0.55, 6.0, 0.07, 1, "لاتكس/تترا"],
-    ["ict", "اختبار سريع ICT (تيفوئيد/H.pylori/فيروسات كبد/HCG/Dengue)", 52800, 1.25, 3.0, 0.09, 1, "الكاسيت أغلى بند بالدولار"],
-    ["semen", "تحليل منوي", 72000, 0.25, 12.0, 0.01, 1, ""],
-    ["hba1c", "HbA1c", 57600, 1.60, 4.0, 0.04, 2, "كواشف مستوردة"],
-    ["electro", "كهارل Na/K/Cl (ISE)", 86400, 1.35, 3.0, 0.05, 2, "خراطيش ISE"],
-    ["coag", "تخثر PT/INR", 72000, 2.00, 4.0, 0.03, 2, ""],
-    ["hormone", "هرمونات CLIA (TSH/FT4/β-hCG)", 120000, 4.50, 6.0, 0.02, 3, "أغلى كواشف"],
-    ["elisa", "ELISA (تأكيد/فيروسات كبد)", 105600, 2.50, 16.0, 0.01, 2, "صفيحة 96 عيناً"]
+    ["cbc", "صورة دم كاملة CBC (3-part)", 4.42, 1.20, 5.0, 0.24, 1, "3 كواشف + QC يومي"],
+    ["chem", "كيمياء – فحص مفرد (يوريا/كرياتينين/حمض بوليك/سكر)", 3.13, 0.45, 4.0, 0.24, 1, "كواشف سائلة، معايرة أسبوعية"],
+    ["panel", "باقة كيمياء (10–12 محللاً)", 15.46, 2.60, 16.0, 0.07, 1, "أعلى سعر لكل دقيقة فني"],
+    ["hb", "هيموغلوبين Hb", 1.47, 0.12, 1.5, 0.04, 1, "Drabkin"],
+    ["esr", "سرعة الترسيب ESR", 2.94, 0.20, 5.0, 0.04, 1, "Westergren يدوي"],
+    ["malaria", "شريط/فيلم الملاريا", 2.94, 0.75, 8.0, 0.08, 1, "موسمي"],
+    ["urine", "بول عام U.G (شريط + مجهر)", 2.94, 0.45, 6.0, 0.06, 1, "شريط 10 بارامتر"],
+    ["stool", "براز عام", 2.94, 0.30, 7.0, 0.02, 1, ""],
+    ["serology", "سيرولوجي (Widal/ASO/RF/CRP/VDRL)", 2.76, 0.55, 6.0, 0.07, 1, "لاتكس/تترا"],
+    ["ict", "اختبار سريع ICT (تيفوئيد/H.pylori/فيروسات كبد/HCG/Dengue)", 4.05, 1.25, 3.0, 0.09, 1, "الكاسيت أغلى بند بالدولار"],
+    ["semen", "تحليل منوي", 5.52, 0.25, 12.0, 0.01, 1, ""],
+    ["hba1c", "HbA1c", 4.42, 1.60, 4.0, 0.04, 2, "كواشف مستوردة"],
+    ["electro", "كهارل Na/K/Cl (ISE)", 6.62, 1.35, 3.0, 0.05, 2, "خراطيش ISE"],
+    ["coag", "تخثر PT/INR", 5.52, 2.00, 4.0, 0.03, 2, ""],
+    ["hormone", "هرمونات CLIA (TSH/FT4/β-hCG)", 9.2, 4.50, 6.0, 0.02, 3, "أغلى كواشف"],
+    ["elisa", "ELISA (تأكيد/فيروسات كبد)", 8.1, 2.50, 16.0, 0.01, 2, "صفيحة 96 عيناً"]
   ];
 
   var CAPEX_P1 = [
@@ -140,7 +141,7 @@
       A: Object.assign({}, A, over.A || {}),
       menu: (over.menu || MENU).map(function (m) {
         if (Array.isArray(m)) {
-          return { key: m[0], label: m[1], price_sdg: m[2], vc: m[3],
+          return { key: m[0], label: m[1], price_usd: m[2], vc: m[3],
                    tech_min: m[4], share: m[5], phase: m[6], note: m[7] };
         }
         return Object.assign({}, m);
@@ -274,19 +275,21 @@
       var season = SEASON[m] || 1;
       var rEff = fxAt(Math.max(t - p.pass_lag_months, 0)) / p.fx_sdg - 1;
       var priceF = (1 + p.pass_through * rEff) * Math.pow(1 - p.price_erosion, t / 12);
+      var erosionF = Math.pow(1 - p.price_erosion, t / 12);
       var fxNow = fxAt(t);
 
       var revSdg = 0, varc = 0, per = {};
       keys.forEach(function (k) {
         var mult = SEASONAL.indexOf(k.key) >= 0 ? season : 1;
         var n = d.orders * (k.share / tot) * (1 + (mult - 1) * 0.35);
-        var pSdg = k.price_sdg * p.price_index * priceF;
+        // USD-priced menu: no FX pass-through (USD is the anchor), only erosion
+        var pUsd = k.price_usd * p.price_index * erosionF;
         var vc = k.vc * p.vc_mult * (1 + p.import_premium);
-        revSdg += n * pSdg;
+        revSdg += n * pUsd * fxNow;
         varc += n * vc;
         per[k.key] = {
-          label: k.label, n: n, price_sdg: pSdg, price_usd: pSdg / fxNow, vc: vc,
-          contribution: n * (pSdg / fxNow - vc), revenue: n * pSdg / fxNow,
+          label: k.label, n: n, price_usd: pUsd, price_sdg: pUsd * fxNow, vc: vc,
+          contribution: n * (pUsd - vc), revenue: n * pUsd,
           share_pct: d.orders ? n / d.orders * 100 : 0, phase: k.phase, tech_min: k.tech_min
         };
       });

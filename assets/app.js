@@ -197,15 +197,15 @@
 
     tb.innerHTML = state.menu.map(function (item, i) {
       var per = r12.per[item.key] || { n: 0, contribution: 0, price_usd: 0 };
-      var priceUsd = item.price_sdg * state.A.price_index / r12.fx;
+      var priceUsd = item.price_usd * state.A.price_index;
       var cm = priceUsd - item.vc * state.A.vc_mult * (1 + state.A.import_premium);
       var margin = priceUsd > 0 ? cm / priceUsd * 100 : 0;
       var cls = margin >= 70 ? "g" : margin >= 45 ? "a" : "r";
       return "<tr>" +
         '<td class="name">' + esc(item.label) +
           (item.phase > 1 ? ' <span class="pill">م' + item.phase + "</span>" : "") + "</td>" +
-        '<td class="num"><input type="number" step="1000" min="0" ' +
-          'data-menu="' + i + '" data-field="price_sdg" value="' + item.price_sdg + '"></td>' +
+        '<td class="num"><input type="number" step="0.25" min="0" ' +
+          'data-menu="' + i + '" data-field="price_usd" value="' + item.price_usd + '"></td>' +
         '<td class="num"><input type="number" step="0.05" min="0" ' +
           'data-menu="' + i + '" data-field="vc" value="' + item.vc + '"></td>' +
         '<td class="num"><input type="number" step="0.005" min="0" max="1" ' +
@@ -224,7 +224,7 @@
     if (cards) {
       cards.innerHTML = state.menu.map(function (item, i) {
         var per = r12.per[item.key] || { n: 0, contribution: 0 };
-        var priceUsd = item.price_sdg * state.A.price_index / r12.fx;
+        var priceUsd = item.price_usd * state.A.price_index;
         var cm = priceUsd - item.vc * state.A.vc_mult * (1 + state.A.import_premium);
         var margin = priceUsd > 0 ? cm / priceUsd * 100 : 0;
         var cls = margin >= 70 ? "g" : margin >= 45 ? "a" : "r";
@@ -236,8 +236,8 @@
             '<button class="btn sm ghost" data-del="menu" data-i="' + i + '" title="حذف">✕</button>' +
           "</span></div>" +
           '<div class="tcard-g">' +
-            '<div class="field"><label>السعر (جنيه سوداني)</label><input type="number" step="1000" min="0" ' +
-              'data-menu="' + i + '" data-field="price_sdg" value="' + item.price_sdg + '"></div>' +
+            '<div class="field"><label>السعر ($)</label><input type="number" step="0.25" min="0" ' +
+              'data-menu="' + i + '" data-field="price_usd" value="' + item.price_usd + '"></div>' +
             '<div class="field"><label>تكلفة الكواشف ($)</label><input type="number" step="0.05" min="0" ' +
               'data-menu="' + i + '" data-field="vc" value="' + item.vc + '"></div>' +
             '<div class="field"><label>حصة الطلب</label><input type="number" step="0.005" min="0" max="1" ' +
@@ -283,7 +283,7 @@
     var r12 = results.base.months[11];
     var fx = r12.fx, p = results.st.A;
     state.menu.forEach(function (item, i) {
-      var priceUsd = item.price_sdg * p.price_index / fx;
+      var priceUsd = item.price_usd * p.price_index;
       var cm = priceUsd - item.vc * p.vc_mult * (1 + p.import_premium);
       var margin = priceUsd > 0 ? cm / priceUsd * 100 : 0;
       var cls = margin >= 70 ? "g" : margin >= 45 ? "a" : "r";
@@ -871,7 +871,7 @@
       var mw = null;
       results.st.menu.forEach(function (x) { if (x.key === k) mw = x; });
       if (!mw) return null;
-      var usdPrice = mw.price_sdg * p.price_index / fx;
+      var usdPrice = mw.price_usd * p.price_index;
       var vc = mw.vc * p.vc_mult * (1 + p.import_premium);
       var mins = mw.tech_min + p.overhead_min_per_order;
       return { label: mw.label, perMin: (usdPrice - vc) / mins, mins: mins,
@@ -1134,7 +1134,7 @@
           var n = Object.keys(state.menu).length + 1;
           state.menu.push({
             key: "custom_" + Date.now(), label: "فحص جديد " + n,
-            price_sdg: 20000, vc: 0.8, tech_min: 5, share: 0.02, phase: 1, note: ""
+            price_usd: 2.5, vc: 0.8, tech_min: 5, share: 0.02, phase: 1, note: ""
           });
         }
         onChange();
