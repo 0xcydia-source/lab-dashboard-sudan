@@ -1,48 +1,57 @@
-# لوحة القرار — معمل طبي، أركوت/الخرطوم
+# Laboratory Feasibility Dashboard
 
-موقع ثابت (HTML/CSS/JS بدون أي مكتبات أو خادم) يحتوي:
+A static site (HTML/CSS/JS, no libraries, no server) for planning a small medical laboratory.
 
-| الصفحة | الوصف |
+| Page | What it is |
 |---|---|
-| `index.html` | **لوحة التحكم التفاعلية**: عدّل أسعار الفحوص وتكاليف الأجهزة والكواشف وسعر الصرف وشاهد التكلفة والعائد الشهري ونقطة التعادل فوراً |
-| `study.html` | **دراسة الجدوى الكاملة**: 18 قسماً + 4 ملاحق + 10 أشكال، بنفس محتوى ملف Word |
-| `out/*.pdf` | نسخة PDF للطباعة |
-| `out/*.xlsx` | نموذج Excel قابل للتعديل |
+| `index.html` | **Interactive dashboard** - edit test prices, equipment, reagent costs and FX; every metric and chart updates instantly |
+| `study.html` | The original 32-page feasibility report (Arabic, print-ready) |
+| `out/*.pdf` | PDF version of the report |
+| `out/*.xlsx` | Editable Excel model |
 
-## ما يمكن تعديله في اللوحة
+## What you can edit
 
-- **الفحوص (16)**: سعر البيع بالجنيه، تكلفة الكواشف بالدولار، حصة الطلب، دقائق الفني
-- **الأجهزة والمرحلة 1 (20 بنداً)** + المرحلتان 2 و3 — إضافة/حذف بنود حرة
-- **التكاليف الثابتة (15 بنداً)** — إضافة/حذف
-- **الافتراضات**: سعر الصرف، الحجم، التمرير، الضريبة، الصيانة، الشحن، الاحتياطي، الرواتب …
-- **الحسابات تتحدث أثناء الكتابة**: المؤشرات، التكلفة، الهامش، التعادل، التدفق، NPV
+- **Test menu** - name, price (USD), reagent cost, order share, technologist minutes, add/delete rows
+- **Equipment & set-up** - 20 phase-1 lines plus phase 2 and 3, all editable, add/delete
+- **Monthly costs** - 15 fixed lines, add/delete; wages are separate
+- **Assumptions** - FX rate, volume, pass-through, tax, service contract, freight, contingency
+- **Feasibility study** - free-text title, location, owner, summary, strengths, weaknesses, recommendations
 
-## الخصوصية
+The report tab rebuilds itself from your numbers and prints to PDF.
 
-لا يوجد خادم ولا تحليلات. الأرقام تُحفظ في `localStorage` داخل متصفحك فقط.
-زر «تصدير الأرقام» يُنزّل ملف JSON، و«استيراد أرقام» يعيده (مفيد لتبادل السيناريوهات).
+## Pricing model
 
-## البنية
+The menu is priced in **USD** (what the patient pays). The **SDG** list price is derived:
+`price_usd x price_index x fx(t)`. A weaker pound therefore raises the local price list
+instead of silently eating the margin.
+
+Exchange rates used: **1 USD = 12,000 SDG** (Sudan) and **54 EGP** (Egypt - a different
+currency, used only for Egyptian supplier quotes).
+
+## Privacy
+
+No server, no analytics. Data lives in `localStorage`. Export/import JSON to move scenarios.
+
+## Structure
 
 ```
-index.html      لوحة التحكم
-study.html      دراسة الجدوى (مُصدَّرة من ملف Word)
-assets/engine.js  النمذجة المالية (JS مطابق لنموذج Python في المستودع)
-assets/app.js     واجهة اللوحة، الرسوم SVG، الحفظ المحلي
-assets/app.css    الأنماط (RTL، متوافقة مع الهاتف)
-assets/img/       أشكال الدراسة
+index.html        dashboard
+study.html        original report
+assets/engine.js  financial model (mirrors model.py in the parent folder)
+assets/app.js     UI, SVG charts, persistence
+assets/app.css    styles (LTR, mobile-first)
+assets/img/       report figures
 ```
 
-## إعادة التوليد من المصدر
+## Rebuild
 
 ```bash
-cd ..                       # مجلد labsudan-ops
-./build.sh                  # Word + PDF + Excel + الرسوم
-python3 export_html.py      # دراسة الجدوى -> site/study.html
-node -e "..."               # (اختياري) اختبار تطابق محرك JS مع Python
+cd ..                 # labsudan-ops
+./build.sh            # Word + PDF + Excel + charts
+python3 export_html.py
 ```
 
-## ملاحظة على الأرقام
+## Note on the numbers
 
-كل رقم معلَّم «تقدير» في الدراسة يجب أن يُستبدل بعرض سعر مكتوب قبل أي التزام مالي.
-الأرقام التي أدخلتها أنت أو الموردون هي وحدها الحقيقية.
+Anything marked *estimate* in the model should be replaced by a written supplier quote
+before any money is committed.
