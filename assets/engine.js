@@ -383,8 +383,8 @@
     var irr = irrOf(cf);
 
     var r12 = ms[11];
-    var avgP = r12.rev / r12.orders;
-    var avgVc = r12["var"] / r12.orders;
+    var avgP = r12.orders ? r12.rev / r12.orders : 0;
+    var avgVc = r12.orders ? r12["var"] / r12.orders : 0;
     var cm = avgP * (1 - p.revenue_leakage - p.referred_share * p.referral_pct) - avgVc;
     var fixedAll = r12.fixed + r12.labour + r12.service;
     var be = cm > 0 ? fixedAll / cm : Infinity;
@@ -413,7 +413,7 @@
       yr2_net: Math.round(sum(ms.slice(12, 24), function (r) { return r.net; })),
       yr3_net: Math.round(sum(ms.slice(24, 36), function (r) { return r.net; })),
       m12_rev: Math.round(r12.rev), m12_ebitda: Math.round(r12.ebitda),
-      m12_margin: Math.round(r12.ebitda / r12.rev * 1000) / 10,
+      m12_margin: r12.rev ? Math.round(r12.ebitda / r12.rev * 1000) / 10 : null,
       m12_orders_day: Math.round(r12.orders_day * 10) / 10,
       m12_orders: Math.round(r12.orders),
       m12_patients: Math.round(r12.patients * 10) / 10,

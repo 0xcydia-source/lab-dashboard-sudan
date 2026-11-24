@@ -12,10 +12,11 @@
 <body>
 
 <header class="topbar">
-  <a class="brand" href="index.html"><span class="logo">🧪</span><span>معمل أركوت</span></a>
+  <a class="brand" href="index.html"><span class="logo" aria-hidden="true">🧪</span><span class="brandtxt">معمل أركوت</span></a>
   <nav class="topnav">
     <a href="index.html" class="on">لوحة التحكم</a>
-    <a href="study.html">دراسة الجدوى</a>
+    <a href="#plan" id="nav-plan">دراسة الجدوى</a>
+    <a href="study.html">المستند الأصلي</a>
     <a href="out/دراسة_جدوى_معمل_طبي_الخرطوم.pdf" download>PDF</a>
     <a href="out/نموذج_المعمل_القابل_للتعديل.xlsx" download>Excel</a>
   </nav>
@@ -29,12 +30,11 @@
        (لا يُرسل شيء إلى أي خادم). الأرقام الملوّنة بالكهرماني هي التي عدّلتها.</p>
   </div>
 
-  <div class="presetbar">
-    <div class="segment" role="group" aria-label="حجم المعمل">
-      <button data-preset="lean" aria-pressed="false">معمل صغير <b>~5,000$</b></button>
-      <button data-preset="full" aria-pressed="true">الخطة الكاملة <b>~16,000$</b></button>
-    </div>
-    <p class="preset-note" id="preset-note"></p>
+  <div class="note info" id="empty-hint" hidden>
+    <strong>لم تُدخل بيانات بعد.</strong> ابدأ من تبويب
+    <a href="#" data-goto="capex">الأجهزة والتجهيز</a> ثم
+    <a href="#" data-goto="tests">الفحوص والأسعار</a> و
+    <a href="#" data-goto="opex">التكاليف الشهرية</a>. كل حقل مفتوح لك — لا شيء إلزامي.
   </div>
 
   <!-- ------------------------------------------------------------- KPIs -->
@@ -44,9 +44,10 @@
     <button class="btn primary" id="btn-print">طباعة / حفظ PDF</button>
     <button class="btn" id="btn-json">تصدير الأرقام (JSON)</button>
     <button class="btn" id="btn-load">استيراد أرقام</button>
-    <button class="btn ghost" id="btn-reset">استعادة القيم الأصلية</button>
+    <button class="btn" id="btn-empty">ابدأ فارغاً</button>
+    <button class="btn ghost" id="btn-reset">استعادة المثال</button>
     <input type="file" id="file-input" accept="application/json" class="visually-hidden">
-    <span class="pill" id="save-state">محفوظ تلقائياً</span>
+    <span class="pill" id="save-state" style="margin-inline-start:auto">محفوظ تلقائياً</span>
   </div>
 
   <div class="tabs" role="tablist" id="tabs">
@@ -56,6 +57,7 @@
     <button role="tab" aria-selected="false" data-tab="opex">التكاليف الشهرية</button>
     <button role="tab" aria-selected="false" data-tab="assumptions">الافتراضات والتشغيل</button>
     <button role="tab" aria-selected="false" data-tab="monthly">النتائج شهراً بشهر</button>
+    <button role="tab" aria-selected="false" data-tab="plan">دراسة الجدوى</button>
   </div>
 
   <!-- -------------------------------------------------------- tab: overview -->
@@ -444,6 +446,48 @@
           <tbody></tbody>
         </table>
       </div>
+    </div>
+  </section>
+
+  <section data-panel="plan" hidden>
+    <div class="card">
+      <h2>بيانات الدراسة — اكتبها كما تريد</h2>
+      <p class="sub">هذه الحقول حرة بالكامل. لا شيء منها إلزامي، وما تكتبه يظهر في التقرير أسفل الصفحة.</p>
+      <div class="fields">
+        <div class="field"><label for="plan-name">اسم المشروع / الدراسة</label>
+          <input type="text" id="plan-name" placeholder="مثال: معمل أركوت الطبي"></div>
+        <div class="field"><label for="plan-location">الموقع</label>
+          <input type="text" id="plan-location" placeholder="المدينة / الحي"></div>
+        <div class="field"><label for="plan-owner">صاحب المشروع</label>
+          <input type="text" id="plan-owner" placeholder="الاسم"></div>
+        <div class="field"><label for="plan-date">التاريخ</label>
+          <input type="text" id="plan-date" placeholder="2026"></div>
+        <div class="field"><label for="plan-area">مساحة المكان (م²)</label>
+          <input type="text" id="plan-area" placeholder="60"></div>
+        <div class="field"><label for="plan-notes">ملخص تنفيذي</label>
+          <input type="text" id="plan-notes" placeholder="سطران يلخّصان الفكرة"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>التحليل — بصياغتك</h2>
+      <div class="fields" style="grid-template-columns:1fr">
+        <div class="field"><label for="plan-strengths">نقاط القوة</label>
+          <textarea id="plan-strengths" rows="3" placeholder="ما يجعله ينجح"></textarea></div>
+        <div class="field"><label for="plan-weaknesses">نقاط الضعف والمخاطر</label>
+          <textarea id="plan-weaknesses" rows="3" placeholder="ما قد يوقفه"></textarea></div>
+        <div class="field"><label for="plan-recommendations">التوصيات</label>
+          <textarea id="plan-recommendations" rows="3" placeholder="ما يجب فعله"></textarea></div>
+      </div>
+    </div>
+
+    <div class="card reportcard">
+      <h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <span>المسودة النهائية</span>
+        <button class="btn sm primary" id="btn-print-report">طباعة / حفظ PDF</button>
+      </h2>
+      <p class="sub">تتحدّث تلقائياً من أرقامك أعلاه. اطبعها أو صدّرها PDF.</p>
+      <div id="report-host" class="report"></div>
     </div>
   </section>
 

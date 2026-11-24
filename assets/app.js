@@ -28,42 +28,71 @@
   var state = load();
   var results = null;
 
-  function defaultsState(preset) {
-    preset = preset || (typeof PRESET !== "undefined" ? PRESET.id : "full");
+  function EMPTY_PLAN() {
+    return { name: "", location: "", owner: "", date: "", area: "", notes: "",
+             strengths: "", weaknesses: "", recommendations: "" };
+  }
+
+  /* A blank but STRUCTURALLY valid starting point: one of each row type so the
+     tables are visible, with zeros you replace. Nothing is pre-filled. */
+  function blankState() {
     var s = M.makeState();
-    var lean = preset === "lean";
-    var A2 = Object.assign({}, s.A);
-    if (lean) { A2.phase2_month = 999; A2.phase3_month = 999; }
     return {
-      preset: preset,
-      A: A2,
+      preset: "custom",
+      A: Object.assign({}, s.A),
+      menu: [
+        { key: "t1", label: "فحص 1", price_usd: 0, vc: 0, tech_min: 5, share: 1, phase: 1, note: "" },
+        { key: "t2", label: "فحص 2", price_usd: 0, vc: 0, tech_min: 5, share: 0, phase: 1, note: "" }
+      ],
+      capex_p1: [
+        { item: "جهاز 1", qty: 1, unit: 0, src: "custom", note: "" },
+        { item: "بند 2", qty: 1, unit: 0, src: "custom", note: "" }
+      ],
+      capex_p2: [{ item: "بند", qty: 1, unit: 0, src: "custom", note: "" }],
+      capex_p3: [{ item: "بند", qty: 1, unit: 0, src: "custom", note: "" }],
+      fixed_opex: [
+        { label: "إيجار", usd: 0 },
+        { label: "راتب", usd: 0 }
+      ],
+      lab: Object.assign({}, s.lab),
+      ramp: s.ramp.slice(),
+      plan: Object.assign({}, EMPTY_PLAN()),
+      stock_opening: 0,
+      contingency: 0,
+      freight: 0,
+      install: 0
+    };
+  }
+
+  /* The worked example from the study: the SAMPLE numbers you can edit or wipe. */
+  function defaultsState() {
+    var s = M.makeState();
+    return {
+      preset: "example",
+      A: Object.assign({}, s.A),
       menu: s.menu.map(function (m) { return Object.assign({}, m); }),
-      capex_p1: (lean
-        ? M.LEAN_BOM.map(function (c) {
-            return { item: c[0], qty: c[1], unit: c[2], src: c[3], note: "" };
-          })
-        : s.capex_p1.map(function (c) { return Object.assign({}, c); })),
-      // the lean lab is the whole project: no phase 2/3 until you add them back
-      capex_p2: lean ? [] : s.capex_p2.map(function (c) { return Object.assign({}, c); }),
-      capex_p3: lean ? [] : s.capex_p3.map(function (c) { return Object.assign({}, c); }),
+      capex_p1: s.capex_p1.map(function (c) { return Object.assign({}, c); }),
+      capex_p2: s.capex_p2.map(function (c) { return Object.assign({}, c); }),
+      capex_p3: s.capex_p3.map(function (c) { return Object.assign({}, c); }),
       fixed_opex: s.fixed_opex.map(function (c) { return Object.assign({}, c); }),
       lab: Object.assign({}, s.lab),
       ramp: s.ramp.slice(),
-      stock_opening: lean ? M.LEAN_PCT.stock : s.stock_opening,
-      contingency: lean ? M.LEAN_PCT.contingency : s.contingency,
-      freight: lean ? M.LEAN_PCT.freight : s.freight,
-      install: lean ? M.LEAN_PCT.install : s.install
+      // editable business-plan text (shown on the report page)
+      plan: Object.assign({}, EMPTY_PLAN()),
+      stock_opening: s.stock_opening,
+      contingency: s.contingency,
+      freight: s.freight,
+      install: s.install
     };
   }
   var DEFAULTS = defaultsState();
-  var PRESET = { id: "full" };
 
   function load() {
     try {
       var raw = localStorage.getItem(STORE);
       if (!raw) return defaultsState();
       var got = JSON.parse(raw);
-      var base = defaultsState(got.preset || "full");
+      var base = defaultsState();
       return mergeDeep(base, got);
     } catch (e) { return defaultsState(); }
   }
@@ -133,6 +162,11 @@
   /* ------------------------------------------------------------------- KPIs */
   function renderKpis() {
     var m = results.m;
+    var isBlank = results.st.capex_p1.every(function (c) { return !c.unit; })
+               && results.st.menu.every(function (t) { return !t.price_usd; });
+    // nudge the user to the input tabs when nothing is priced yet
+    var hint = $("#empty-hint");
+    if (hint) hint.hidden = !isBlank;
     var pb = m.payback_months === null
       ? { v: "لا يحدث", s: "خلال 36 شهراً", c: "bad" }
       : { v: nf(m.payback_months, 1) + " شهر", s: "لا تشمل قيمة بيعية",
@@ -148,10 +182,13 @@
       { k: "النقد المطلوب قبل الافتتاح", v: usd(m.funding_need),
         s: "أسوأ نقطة: الشهر " + m.trough_month, c: "warn" },
       { k: "استرداد رأس المال", v: pb.v, s: pb.s, c: pb.c },
-      { k: "هامش EBITDA (شهر 12)", v: pct(m.m12_margin),
-        s: "إيراد " + usd(m.m12_rev) + "/شهر", c: m.m12_margin >= 30 ? "good" : "warn" },
-      { k: "نقطة التعادل", v: nf(m.be_orders_day, 1) + " طلب/يوم",
-        s: "≈ " + nf(m.be_patients_day, 0) + " مريضاً/يوم", c: beC },
+      { k: "هامش EBITDA (شهر 12)", v: isFinite(m.m12_margin) ? pct(m.m12_margin) : "—",
+        s: "إيراد " + usd(m.m12_rev) + "/شهر",
+        c: !isFinite(m.m12_margin) ? "" : m.m12_margin >= 30 ? "good" : "warn" },
+      { k: "نقطة التعادل",
+        v: (m.be_orders_day === null || !isFinite(m.be_orders_day)) ? "—" : nf(m.be_orders_day, 1) + " طلب/يوم",
+        s: (m.be_patients_day === null || !isFinite(m.be_patients_day))
+            ? "أدخل الأسعار والتكاليف" : "≈ " + nf(m.be_patients_day, 0) + " مريضاً/يوم", c: beC },
       { k: "صافي القيمة الحالية (22%)", v: usd(m.npv22),
         s: "36 شهراً" + (m.irr_annual === null ? "" : " · IRR " + nf(m.irr_annual) + "%"), c: npvC }
     ];
@@ -202,8 +239,9 @@
       var margin = priceUsd > 0 ? cm / priceUsd * 100 : 0;
       var cls = margin >= 70 ? "g" : margin >= 45 ? "a" : "r";
       return "<tr>" +
-        '<td class="name">' + esc(item.label) +
-          (item.phase > 1 ? ' <span class="pill">م' + item.phase + "</span>" : "") + "</td>" +
+        '<td class="name"><input class="nameinput" type="text" ' +
+          'data-menu="' + i + '" data-field="label" value="' + esc(item.label) + '" ' +
+          'title="اكتب اسم الفحص كما تريده"></td>' +
         '<td class="num"><input type="number" step="0.25" min="0" ' +
           'data-menu="' + i + '" data-field="price_usd" value="' + item.price_usd + '"></td>' +
         '<td class="num"><input type="number" step="0.05" min="0" ' +
@@ -229,9 +267,9 @@
         var margin = priceUsd > 0 ? cm / priceUsd * 100 : 0;
         var cls = margin >= 70 ? "g" : margin >= 45 ? "a" : "r";
         return '<div class="tcard">' +
-          '<div class="tcard-h"><span>' + esc(item.label) +
-            (item.phase > 1 ? ' <span class="pill">م' + item.phase + "</span>" : "") +
-          '</span><span style="display:flex;gap:6px;align-items:center;flex:none">' +
+          '<div class="tcard-h"><input class="nameinput" type="text" ' +
+            'data-menu="' + i + '" data-field="label" value="' + esc(item.label) + '">' +
+          '<span style="display:flex;gap:6px;align-items:center;flex:none">' +
             '<span class="pill ' + cls + '" data-derived="mgc:' + i + '">' + nf(margin) + "%</span>" +
             '<button class="btn sm ghost" data-del="menu" data-i="' + i + '" title="حذف">✕</button>' +
           "</span></div>" +
@@ -360,7 +398,9 @@
     var c1 = $("#capex1-cards");
     if (c1) {
       c1.innerHTML = state.capex_p1.map(function (c, i) {
-        return '<div class="tcard"><div class="tcard-h"><span>' + esc(c.item) + "</span>" +
+        return '<div class="tcard"><div class="tcard-h">' +
+          '<input class="nameinput" type="text" data-cx="1" data-i="' + i +
+            '" data-f="item" value="' + esc(c.item) + '">' +
           '<button class="btn sm ghost" data-del="capex_p1" data-i="' + i + '" title="حذف">✕</button></div>' +
           '<div class="tcard-g">' +
             '<div class="field"><label>العدد</label><input type="number" min="0" step="1" ' +
@@ -376,7 +416,9 @@
       var el = $("#capex" + ph + "-cards");
       if (!el) return;
       el.innerHTML = state["capex_p" + ph].map(function (c, i) {
-        return '<div class="tcard"><div class="tcard-h"><span>' + esc(c.item) + "</span>" +
+        return '<div class="tcard"><div class="tcard-h">' +
+          '<input class="nameinput" type="text" data-cx="' + ph + '" data-i="' + i +
+            '" data-f="item" value="' + esc(c.item) + '">' +
           '<button class="btn sm ghost" data-del="capex_p' + ph + '" data-i="' + i + '" title="حذف">✕</button></div>' +
           '<div class="tcard-g"><div class="field"><label>السعر ($)</label>' +
             '<input type="number" min="0" step="25" data-cx="' + ph + '" data-i="' + i +
@@ -460,7 +502,9 @@
     var oc = $("#opex-cards");
     if (oc) {
       oc.innerHTML = state.fixed_opex.map(function (o, i) {
-        return '<div class="tcard"><div class="tcard-h"><span>' + esc(o.label) + "</span>" +
+        return '<div class="tcard"><div class="tcard-h">' +
+          '<input class="nameinput" type="text" data-op="1" data-i="' + i +
+            '" data-f="label" value="' + esc(o.label) + '">' +
           '<button class="btn sm ghost" data-del="fixed_opex" data-i="' + i + '" title="حذف">✕</button></div>' +
           '<div class="tcard-g"><div class="field"><label>شهرياً ($)</label>' +
             '<input type="number" min="0" step="10" data-op="1" data-i="' + i +
@@ -963,6 +1007,7 @@
     if (name === "opex") renderOpex();
     if (name === "monthly") renderMonthly();
     if (name === "assumptions") syncAssumptionInputs();
+    if (name === "plan") { syncPlanInputs(); renderReport(); }
     if (name === "overview") {
       setTimeout(function () {
         if (!results.scen) compute(true);
@@ -1068,6 +1113,11 @@
       if (inp.getAttribute("data-menu")) {
         var k = +inp.getAttribute("data-menu");
         var fld = inp.getAttribute("data-field");
+        if (fld === "label") {
+          state.menu[k].label = inp.value;
+          onChange();
+          return;
+        }
         var val = Number(inp.value);
         if (isNaN(val)) return;
         state.menu[k][fld] = val;
@@ -1077,47 +1127,132 @@
     }, true);
   }
 
-  /* --------------------------------------------------------------- presets */
-  function syncPresetBar() {
-    var id = state.preset || "full";
-    $$("[data-preset]").forEach(function (b) {
-      b.setAttribute("aria-pressed", b.getAttribute("data-preset") === id ? "true" : "false");
+  /* ---------------------------------------------------- editable plan text */
+  var PLAN_FIELDS = {
+    "plan-name": "name", "plan-location": "location", "plan-owner": "owner",
+    "plan-date": "date", "plan-area": "area", "plan-notes": "notes",
+    "plan-strengths": "strengths", "plan-weaknesses": "weaknesses",
+    "plan-recommendations": "recommendations"
+  };
+
+  function syncPlanInputs() {
+    if (!state.plan) state.plan = EMPTY_PLAN();
+    Object.keys(PLAN_FIELDS).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.value = state.plan[PLAN_FIELDS[id]] || "";
     });
-    var note = $("#preset-note");
-    if (note && M.PRESETS[id]) {
-      note.textContent = id === "lean"
-        ? "معمل صغير: جهازا CBC وكيمياء + أساسيات + رخصة. مناسب لبداية بـ 5,000$ نقداً. " +
-          "الأجهزة هنا فئة دخول — تحقق من الكواشف والضمان قبل الشراء."
-        : "الخطة الكاملة: CBC Mindray بضمان + ثلاجة كواشف 350 لتر + مولد 6–7kVA + مخزون أكبر + احتياطي 8%.";
-    }
   }
 
-  function applyPreset(id) {
-    if (!confirm(id === "lean"
-      ? "التحويل إلى «معمل صغير ~5,000$»؟ سيُستبدل جدول الأجهزة بالكامل ونسب الشحن/المخزون. تعديلاتك الحالية على الأجهزة ستُفقد."
-      : "العودة إلى «الخطة الكاملة»؟ سيُستبدل جدول الأجهزة بالكامل. تعديلاتك الحالية على الأجهزة ستُفقد.")) return;
-    var keep = { A: state.A, menu: state.menu, fixed_opex: state.fixed_opex,
-                 lab: state.lab, ramp: state.ramp };
-    state = defaultsState(id);
-    state = mergeDeep(state, keep);
-    state.preset = id;
-    localStorage.setItem(STORE, JSON.stringify(state));
-    compute(true);
-    renderKpis();
-    renderTab(currentTab());
-    syncPresetBar();
-    save();
+  function wirePlanInputs() {
+    Object.keys(PLAN_FIELDS).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("input", function () {
+        state.plan[PLAN_FIELDS[id]] = el.value;
+        el.className = "changed";
+        renderReport();     // the plan text is not part of the financial model
+        save();
+      });
+    });
   }
 
-  function wirePresets() {
-    document.addEventListener("click", function (ev) {
-      var b = ev.target.closest("[data-preset]");
-      if (!b) return;
-      var id = b.getAttribute("data-preset");
-      if (id === (state.preset || "full")) return;
-      applyPreset(id);
-    });
-    syncPresetBar();
+  /* render the editable report page from the CURRENT numbers */
+  function renderReport() {
+    var host = $("#report-host");
+    if (!host) return;
+    var m = results.m, ms = results.base.months, st = results.st;
+    var plan = state.plan || EMPTY_PLAN();
+    var val = function (k, fallback) { return (plan[k] || "").trim() || fallback; };
+
+    var totalCapex = st.capex_p1.reduce(function (s, c) { return s + c.qty * c.unit; }, 0);
+    var rowsCapex = st.capex_p1.map(function (c) {
+      return "<tr><td>" + esc(c.item) + "</td><td class='num'>" + nf(c.qty) + "</td><td class='num'>" +
+        usd(c.unit) + "</td><td class='num'>" + usd(c.qty * c.unit) + "</td></tr>";
+    }).join("");
+
+    var rowsMenu = st.menu.map(function (t) {
+      var per = ms[11].per[t.key] || { n: 0, contribution: 0 };
+      var price = t.price_usd * st.A.price_index;
+      var cm = price - t.vc * st.A.vc_mult * (1 + st.A.import_premium);
+      var mg = price > 0 ? cm / price * 100 : 0;
+      return "<tr><td>" + esc(t.label) + "</td><td class='num'>" + nf(t.share * 100) + "%</td>" +
+        "<td class='num'>" + usd(price, 2) + "</td><td class='num'>" + usd(t.vc, 2) + "</td>" +
+        "<td class='num'>" + usd(cm, 2) + "</td><td class='num'>" + nf(mg) + "%</td></tr>";
+    }).join("");
+
+    var rowsOpex = st.fixed_opex.map(function (o) {
+      return "<tr><td>" + esc(o.label) + "</td><td class='num'>" + usd(o.usd) +
+        "</td><td class='num'>" + usd(o.usd * 12) + "</td></tr>";
+    }).join("");
+
+    var rowsMonths = ms.slice(0, 18).map(function (r) {
+      return "<tr><td class='num'>" + r.month + "</td><td class='num'>" + nf(r.patients) +
+        "</td><td class='num'>" + nf(r.orders_day) + "</td><td class='num'>" + usd(r.rev) +
+        "</td><td class='num'>" + usd(r.ebitda) + "</td><td class='num'>" + usd(r.cum) + "</td></tr>";
+    }).join("");
+
+    host.innerHTML =
+      '<header class="rpt-head">' +
+        "<h1>" + esc(val("name", "دراسة جدوى معمل طبي")) + "</h1>" +
+        '<p class="rpt-meta">' +
+          esc(val("location", "الموقع غير محدد")) + " · " + esc(val("date", new Date().getFullYear())) +
+          (plan.owner ? " · " + esc(plan.owner) : "") +
+          (plan.area ? " · " + esc(plan.area) + " م²" : "") +
+        "</p>" +
+      "</header>" +
+
+      '<section class="rpt-kpis">' + [
+        ["إجمالي الاستثمار", usd(m.capex_total)],
+        ["النقد المطلوب", usd(m.funding_need)],
+        ["الاسترداد", m.payback_months === null ? "لا يحدث" : nf(m.payback_months, 1) + " شهر"],
+        ["EBITDA شهر 12", usd(m.m12_ebitda)],
+        ["التعادل", nf(m.be_orders_day, 1) + " طلب/يوم"],
+        ["NPV 22%", usd(m.npv22)]
+      ].map(function (k) {
+        return '<div class="rk"><span>' + k[0] + "</span><b>" + k[1] + "</b></div>";
+      }).join("") + "</section>" +
+
+      (plan.notes ? "<h2>ملخص</h2><p>" + esc(plan.notes) + "</p>" : "") +
+
+      "<h2>1. التكلفة الرأسمالية</h2>" +
+      "<div class='tw'><table class='tbl'><thead><tr><th>البند</th><th class='num'>العدد</th>" +
+      "<th class='num'>سعر الوحدة</th><th class='num'>الإجمالي</th></tr></thead><tbody>" +
+      rowsCapex + "</tbody><tfoot><tr class='total'><td>العتاد</td><td></td><td></td><td class='num'>" +
+      usd(totalCapex) + "</td></tr><tr><td>شحن " + nf(state.freight * 100) + "%</td><td></td><td></td>" +
+      "<td class='num'>" + usd(results.base.capex.freight) + "</td></tr>" +
+      "<tr><td>تركيب " + nf(state.install * 100) + "%</td><td></td><td></td><td class='num'>" +
+      usd(results.base.capex.install) + "</td></tr>" +
+      "<tr><td>مخزون افتتاحي</td><td></td><td></td><td class='num'>" + usd(results.base.capex.stock) + "</td></tr>" +
+      "<tr><td>احتياطي " + nf(state.contingency * 100) + "%</td><td></td><td></td><td class='num'>" +
+      usd(results.base.capex.contingency) + "</td></tr>" +
+      "<tr class='total'><td>إجمالي المرحلة 1</td><td></td><td></td><td class='num'>" +
+      usd(results.base.capex.p1) + "</td></tr></tfoot></table></div>" +
+
+      "<h2>2. قائمة الفحوص والأسعار</h2>" +
+      "<div class='tw'><table class='tbl'><thead><tr><th>الفحص</th><th class='num'>حصة الطلب</th>" +
+      "<th class='num'>السعر</th><th class='num'>الكواشف</th><th class='num'>المساهمة</th>" +
+      "<th class='num'>الهامش</th></tr></thead><tbody>" + rowsMenu + "</tbody></table></div>" +
+
+      "<h2>3. التكاليف الثابتة</h2>" +
+      "<div class='tw'><table class='tbl'><thead><tr><th>البند</th><th class='num'>شهرياً</th>" +
+      "<th class='num'>سنوياً</th></tr></thead><tbody>" + rowsOpex +
+      "</tbody><tfoot><tr class='total'><td>الإجمالي</td><td class='num'>" +
+      usd(results.base.fixedBase) + "</td><td class='num'>" +
+      usd(results.base.fixedBase * 12) + "</td></tr></tfoot></table></div>" +
+
+      "<h2>4. أول 18 شهراً</h2>" +
+      "<div class='tw'><table class='tbl'><thead><tr><th class='num'>الشهر</th><th class='num'>مرضى/يوم</th>" +
+      "<th class='num'>طلبات/يوم</th><th class='num'>إيراد</th><th class='num'>EBITDA</th>" +
+      "<th class='num'>تراكمي</th></tr></thead><tbody>" + rowsMonths + "</tbody></table></div>" +
+
+      "<h2>5. التحليل</h2>" +
+      "<h3>نقاط القوة</h3><p>" + esc(val("strengths", "—")) + "</p>" +
+      "<h3>نقاط الضعف والمخاطر</h3><p>" + esc(val("weaknesses", "—")) + "</p>" +
+      "<h3>التوصيات</h3><p>" + esc(val("recommendations", "—")) + "</p>" +
+
+      '<p class="rpt-foot">أُنشئت هذه الصفحة من اللوحة بتاريخ ' +
+      new Date().toLocaleDateString("ar-EG") +
+      ". كل رقم فيها مأخوذ من المدخلات التي كتبتها أنت.</p>";
   }
 
   /* ------------------------------------------------------- add / delete rows */
@@ -1168,6 +1303,12 @@
 
   function wireToolbar() {
     $("#btn-print").addEventListener("click", function () { window.print(); });
+    var pr = $("#btn-print-report");
+    if (pr) pr.addEventListener("click", function () {
+      document.body.classList.add("print-report");
+      window.print();
+      setTimeout(function () { document.body.classList.remove("print-report"); }, 500);
+    });
 
     $("#btn-json").addEventListener("click", function () {
       download("lab-inputs.json", JSON.stringify(state, null, 1));
@@ -1190,19 +1331,52 @@
       ev.target.value = "";
     });
 
+    var empty = $("#btn-empty");
+    if (empty) empty.addEventListener("click", function () {
+      if (!confirm("البدء من صفحة بيضاء؟ ستُحذف كل البيانات الحالية.")) return;
+      state = blankState();
+      localStorage.setItem(STORE, JSON.stringify(state));
+      compute(true);
+      renderKpis();
+      var b = $('#tabs button[data-tab="capex"]');
+      if (b) {
+        $$("#tabs button").forEach(function (x) { x.setAttribute("aria-selected", "false"); });
+        b.setAttribute("aria-selected", "true");
+        renderTab("capex");
+      }
+      syncPlanInputs();
+      renderReport();
+    });
+
     $("#btn-reset").addEventListener("click", function () {
       if (!confirm("استعادة القيم الأصلية للدراسة؟ ستُفقد كل تعديلاتك.")) return;
-      state = defaultsState(state.preset || "full");
+      state = defaultsState();
       localStorage.removeItem(STORE);
-      syncPresetBar();
       onChange();
       renderTab(currentTab());
+    });
+
+    document.addEventListener("click", function (ev) {
+      var g = ev.target.closest("[data-goto]");
+      if (!g) return;
+      ev.preventDefault();
+      var b = $('#tabs button[data-tab="' + g.getAttribute("data-goto") + '"]');
+      if (b) b.click();
+    });
+
+    var navPlan = $("#nav-plan");
+    if (navPlan) navPlan.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      var b = $('#tabs button[data-tab="plan"]');
+      if (b) b.click();
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     $$("#tabs button").forEach(function (b) {
       b.addEventListener("click", function () {
         $$("#tabs button").forEach(function (x) { x.setAttribute("aria-selected", "false"); });
         b.setAttribute("aria-selected", "true");
+        if (b.scrollIntoView) b.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
         renderTab(b.getAttribute("data-tab"));
       });
     });
@@ -1224,9 +1398,11 @@
     wireAssumptions();
     wireRowActions();
     wireCardInputs();
-    wirePresets();
+    wirePlanInputs();
     renderTab("overview");
     syncAssumptionInputs();
+    syncPlanInputs();
+    renderReport();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
