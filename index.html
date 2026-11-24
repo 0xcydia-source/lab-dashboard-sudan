@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>لوحة القرار — معمل طبي، أركوت/الخرطوم</title>
+<meta name="description" content="لوحة تحكم تفاعلية لدراسة جدوى معمل طبي: عدّل أسعار الفحوص وتكاليف الأجهزة والكواشف وشاهد التكلفة والعائد الشهري ونقطة التعادل فوراً.">
+<meta name="theme-color" content="#12507a">
+<link rel="stylesheet" href="assets/app.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <a class="brand" href="index.html"><span class="logo">🧪</span><span>معمل أركوت</span></a>
+  <nav class="topnav">
+    <a href="index.html" class="on">لوحة التحكم</a>
+    <a href="study.html">دراسة الجدوى</a>
+    <a href="out/دراسة_جدوى_معمل_طبي_الخرطوم.pdf" download>PDF</a>
+    <a href="out/نموذج_المعمل_القابل_للتعديل.xlsx" download>Excel</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <div class="pagehead">
+    <h1>لوحة القرار — معمل طبي، أركوت/الخرطوم</h1>
+    <p>غيّر أي رقم في الأسفل وستتحدث كل المؤشرات والرسوم فوراً. أرقامك تُحفظ في متصفحك فقط
+       (لا يُرسل شيء إلى أي خادم). الأرقام الملوّنة بالكهرماني هي التي عدّلتها.</p>
+  </div>
+
+  <!-- ------------------------------------------------------------- KPIs -->
+  <section class="kpis" id="kpis" aria-label="المؤشرات الرئيسية"></section>
+
+  <div class="toolbar">
+    <button class="btn primary" id="btn-print">طباعة / حفظ PDF</button>
+    <button class="btn" id="btn-json">تصدير الأرقام (JSON)</button>
+    <button class="btn" id="btn-load">استيراد أرقام</button>
+    <button class="btn ghost" id="btn-reset">استعادة القيم الأصلية</button>
+    <input type="file" id="file-input" accept="application/json" class="visually-hidden">
+    <span class="pill" id="save-state">محفوظ تلقائياً</span>
+  </div>
+
+  <div class="tabs" role="tablist" id="tabs">
+    <button role="tab" aria-selected="true" data-tab="overview">نظرة عامة</button>
+    <button role="tab" aria-selected="false" data-tab="tests">الفحوص والأسعار</button>
+    <button role="tab" aria-selected="false" data-tab="capex">الأجهزة والتجهيز</button>
+    <button role="tab" aria-selected="false" data-tab="opex">التكاليف الشهرية</button>
+    <button role="tab" aria-selected="false" data-tab="assumptions">الافتراضات والتشغيل</button>
+    <button role="tab" aria-selected="false" data-tab="monthly">النتائج شهراً بشهر</button>
+  </div>
+
+  <!-- -------------------------------------------------------- tab: overview -->
+  <section data-panel="overview">
+    <div class="grid c2">
+      <div class="card">
+        <h2>التدفق النقدي التراكمي</h2>
+        <p class="sub">36 شهراً — الحالة الأساسية والمتحفظة والطموحة</p>
+        <div id="ch-cashflow" class="chart tall"></div>
+        <div class="legend">
+          <span><i style="background:#12507a"></i>أساسي</span>
+          <span><i style="background:#a3261f"></i>متحفظ</span>
+          <span><i style="background:#1d7a4d"></i>طموح</span>
+        </div>
+        <p class="chart-note" id="cashflow-note"></p>
+      </div>
+
+      <div class="card">
+        <h2>نقطة التعادل</h2>
+        <p class="sub">كم طلباً يومياً تحتاج لتغطية التكاليف الثابتة والأجور</p>
+        <div id="ch-breakeven" class="chart tall"></div>
+        <p class="chart-note" id="breakeven-note"></p>
+      </div>
+    </div>
+
+    <div class="grid c2">
+      <div class="card">
+        <h2>الإيراد مقابل التكلفة النقدية</h2>
+        <p class="sub">شهرياً — الحالة الأساسية</p>
+        <div id="ch-monthly" class="chart"></div>
+        <div class="legend">
+          <span><i style="background:#12507a"></i>إيراد صافٍ</span>
+          <span><i style="background:#c8860d"></i>تكلفة نقدية</span>
+          <span><i style="background:#a3261f"></i>EBITDA</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>هيكل التكلفة الشهري (الشهر 12)</h2>
+        <p class="sub">أين يذهب كل دولار من الإيراد</p>
+        <div id="ch-costmix"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>الحساسية — أي متغير يغيّر النتيجة أكثر؟</h2>
+      <p class="sub">تغيير عامل واحد في كل مرة حول صافي القيمة الحالية (36 شهراً، 22%)</p>
+      <div id="ch-tornado"></div>
+      <p class="chart-note">كل شريط يمتد بين أسوأ وأفضل قيمة للمتغير. الترتيب تنازلي بحسب الأثر.</p>
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------------------- tab: tests -->
+  <section data-panel="tests" hidden>
+    <div class="note info">
+      عدّل <strong>سعر البيع بالجنيه</strong> أو <strong>تكلفة الكواشف بالدولار</strong> لأي فحص،
+      أو غيّر <strong>حصة الطلب</strong> (كم % من الطلبات يكون هذا الفحص). النتائج تتحدث فوراً.
+    </div>
+    <div class="card">
+      <h2>قائمة الفحوص <span class="pill" id="menu-count"></span></h2>
+      <p class="sub">التكلفة بالدولار لكل طلب · الحصة مجموعها يجب أن يقارب 100%</p>
+      <div id="menu-cards" class="menu-cards"></div>
+      <div class="tw only-wide">
+        <table class="tbl" id="menu-table">
+          <thead>
+            <tr>
+              <th>الفحص</th>
+              <th class="num">السعر (ج.م)</th>
+              <th class="num">التكلفة ($)</th>
+              <th class="num">حصة الطلب</th>
+              <th class="num">مساهمة ($/طلب)</th>
+              <th class="num">هامش</th>
+              <th class="num">دقائق فني</th>
+              <th class="num">طلبات/شهر</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+      <p class="chart-note" id="menu-note"></p>
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------------------- tab: capex -->
+  <section data-panel="capex" hidden>
+    <div class="note info">
+      هذه أسعار الشراء <strong>قبل</strong> الشحن والتخليص. غيّر سعر أي بند أو احذف/أضف بنوداً.
+      الشحن والتركيب والاحتياطي تُحسب تلقائياً بنسبها في تبويب «الافتراضات».
+    </div>
+
+    <div class="card">
+      <h2>المرحلة 1 — الافتتاح</h2>
+      <p class="sub">الأجهزة والتجهيز المطلوب للفتح</p>
+      <div id="capex1-cards" class="stack-cards"></div>
+      <div class="tw only-wide">
+        <table class="tbl" id="capex1-table">
+          <thead>
+            <tr><th>البند</th><th class="num">العدد</th><th class="num">سعر الوحدة ($)</th>
+                <th class="num">الإجمالي</th><th>المصدر</th><th></th></tr>
+          </thead>
+          <tbody></tbody>
+          <tfoot></tfoot>
+        </table>
+      </div>
+      <div class="toolbar" style="margin:10px 0 0">
+        <button class="btn sm" data-add="capex1">+ إضافة بند</button>
+      </div>
+    </div>
+
+    <div class="grid c2">
+      <div class="card">
+        <h2>المرحلة 2 — بعد إثبات الطلب</h2>
+        <p class="sub">تُشترى في الشهر المحدد في الافتراضات</p>
+        <div id="capex2-cards" class="stack-cards"></div>
+        <div class="tw only-wide">
+          <table class="tbl" id="capex2-table">
+            <thead><tr><th>البند</th><th class="num">السعر ($)</th><th></th></tr></thead>
+            <tbody></tbody><tfoot></tfoot>
+          </table>
+        </div>
+        <div class="toolbar" style="margin:10px 0 0">
+          <button class="btn sm" data-add="capex2">+ إضافة بند</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>المرحلة 3 — التوسع</h2>
+        <p class="sub">لا تُشترى قبل ظهور طلب فعلي</p>
+        <div id="capex3-cards" class="stack-cards"></div>
+        <div class="tw only-wide">
+          <table class="tbl" id="capex3-table">
+            <thead><tr><th>البند</th><th class="num">السعر ($)</th><th></th></tr></thead>
+            <tbody></tbody><tfoot></tfoot>
+          </table>
+        </div>
+        <div class="toolbar" style="margin:10px 0 0">
+          <button class="btn sm" data-add="capex3">+ إضافة بند</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ------------------------------------------------------------ tab: opex -->
+  <section data-panel="opex" hidden>
+    <div class="card">
+      <h2>التكاليف الثابتة الشهرية</h2>
+      <p class="sub">ما تدفعه حتى لو لم يدخل مريض واحد — عدّل كل بند بحسب عرض السعر الفعلي</p>
+      <div id="opex-cards" class="stack-cards"></div>
+      <div class="tw only-wide">
+        <table class="tbl" id="opex-table">
+          <thead><tr><th>البند</th><th class="num">شهرياً ($)</th><th class="num">سنوياً</th><th></th></tr></thead>
+          <tbody></tbody><tfoot></tfoot>
+        </table>
+      </div>
+      <div class="toolbar" style="margin:10px 0 0">
+        <button class="btn sm" data-add="opex">+ إضافة بند</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>أجور الفريق</h2>
+      <p class="sub">عدد الفنيين يُحسب تلقائياً من زمن الفحص المطلوب، لا تدخله يدوياً</p>
+      <div class="fields">
+        <div class="field"><label for="lab-tech">فني مختبر ($/شهر)</label>
+          <input type="number" id="lab-tech" data-bind="lab.tech" min="0" step="10"></div>
+        <div class="field"><label for="lab-senior">فني أول / مشرف ($/شهر)</label>
+          <input type="number" id="lab-senior" data-bind="lab.senior_tech" min="0" step="10"></div>
+        <div class="field"><label for="lab-phleb">فني سحب عينات ($/شهر)</label>
+          <input type="number" id="lab-phleb" data-bind="lab.phleb" min="0" step="10"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------------- tab: assumptions -->
+  <section data-panel="assumptions" hidden>
+    <div class="card">
+      <h2>سعر الصرف والحجم</h2>
+      <p class="sub">هذان الرقمان يغيّران كل شيء — حدّثهما أولاً</p>
+      <div class="fields">
+        <div class="field">
+          <label for="fx-sdg">سعر الصرف (جنيه سوداني / دولار)</label>
+          <input type="number" id="fx-sdg" data-bind="A.fx_sdg" min="1" step="10">
+          <span class="hint">سعر السوق الموازي يوم الشراء</span>
+        </div>
+        <div class="field">
+          <label for="fx-egp">سعر الصرف (جنيه مصري / دولار)</label>
+          <input type="number" id="fx-egp" data-bind="A.fx_egp" min="1" step="1">
+          <span class="hint">لتحويل أسعار الموردين المصريين</span>
+        </div>
+        <div class="field">
+          <label for="price-index">سعرنا نسبةً لقائمة المنافس</label>
+          <input type="number" id="price-index" data-bind="A.price_index" min="0.3" max="1.5" step="0.01">
+          <span class="hint">0.92 = أرخص بـ 8%</span>
+        </div>
+        <div class="field">
+          <label for="tpp">عدد الطلبات لكل مريض</label>
+          <input type="number" id="tpp" data-bind="A.tests_per_patient" min="1" max="4" step="0.05">
+        </div>
+        <div class="field">
+          <label for="ramp12">عدد المرضى في الشهر 12</label>
+          <input type="number" id="ramp12" data-bind="ramp12" min="5" max="400" step="1">
+          <span class="hint">الرامب يبدأ من 15% من هذا الرقم</span>
+        </div>
+        <div class="field">
+          <label for="days">أيام العمل في الشهر</label>
+          <input type="number" id="days" data-bind="A.days" min="15" max="31" step="1">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>سعر الصرف والتسعير</h2>
+      <div class="fields">
+        <div class="field">
+          <label for="fx-drift">انخفاض الجنيه سنوياً</label>
+          <input type="number" id="fx-drift" data-bind="A.fx_drift" min="0" max="2" step="0.01">
+          <span class="hint">0.18 = 18% في السنة</span>
+        </div>
+        <div class="field">
+          <label for="pass">نسبة تمرير تغير الصرف للأسعار</label>
+          <input type="number" id="pass" data-bind="A.pass_through" min="0" max="1" step="0.05">
+        </div>
+        <div class="field">
+          <label for="lag">تأخير تحديث قائمة الأسعار (شهور)</label>
+          <input type="number" id="lag" data-bind="A.pass_lag_months" min="0" max="12" step="1">
+        </div>
+        <div class="field">
+          <label for="erosion">تآكل السعر سنوياً (منافسة)</label>
+          <input type="number" id="erosion" data-bind="A.price_erosion" min="0" max="0.3" step="0.005">
+        </div>
+        <div class="field">
+          <label for="leak">تسرب إيراد (فحص مجاني/ديون)</label>
+          <input type="number" id="leak" data-bind="A.revenue_leakage" min="0" max="0.3" step="0.005">
+        </div>
+        <div class="field">
+          <label for="referral">عمولة إحالة للأطباء</label>
+          <input type="number" id="referral" data-bind="A.referral_pct" min="0" max="0.3" step="0.005">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>التشغيل والطاقة</h2>
+      <div class="fields">
+        <div class="field">
+          <label for="shift">دقائق الوردية</label>
+          <input type="number" id="shift" data-bind="A.shift_min" min="240" max="720" step="30">
+        </div>
+        <div class="field">
+          <label for="eff">إنتاجية الفني</label>
+          <input type="number" id="eff" data-bind="A.tech_eff" min="0.4" max="1" step="0.01">
+        </div>
+        <div class="field">
+          <label for="hire">التوظيف عند استخدام</label>
+          <input type="number" id="hire" data-bind="A.hire_at_util" min="0.5" max="1" step="0.05">
+        </div>
+        <div class="field">
+          <label for="overhead">دقائق إدارية لكل طلب</label>
+          <input type="number" id="overhead" data-bind="A.overhead_min_per_order" min="0" max="10" step="0.1">
+        </div>
+        <div class="field">
+          <label for="collect">مستهلكات سحب لكل مريض ($)</label>
+          <input type="number" id="collect" data-bind="A.collection_consumables_usd" min="0" max="10" step="0.05">
+        </div>
+        <div class="field">
+          <label for="importprem">علاوة الوصول للدولار</label>
+          <input type="number" id="importprem" data-bind="A.import_premium" min="0" max="0.5" step="0.01">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>التمويل والمراحل</h2>
+      <div class="fields">
+        <div class="field">
+          <label for="discount">معدل الخصم السنوي</label>
+          <input type="number" id="discount" data-bind="A.discount" min="0" max="1" step="0.01">
+          <span class="hint">0.22 = مخاطرة بلد مرتفعة</span>
+        </div>
+        <div class="field">
+          <label for="tax">ضريبة + زكاة</label>
+          <input type="number" id="tax" data-bind="A.tax" min="0" max="0.6" step="0.01">
+        </div>
+        <div class="field">
+          <label for="p2m">شهر شراء المرحلة 2</label>
+          <input type="number" id="p2m" data-bind="A.phase2_month" min="2" max="36" step="1">
+        </div>
+        <div class="field">
+          <label for="p3m">شهر شراء المرحلة 3</label>
+          <input type="number" id="p3m" data-bind="A.phase3_month" min="3" max="60" step="1">
+        </div>
+        <div class="field">
+          <label for="stock">أشهر مخزون كواشف</label>
+          <input type="number" id="stock" data-bind="A.stock_months" min="0" max="6" step="0.25">
+        </div>
+        <div class="field">
+          <label for="recv">رأس مال عامل في المستحقات</label>
+          <input type="number" id="recv" data-bind="A.wc_months_recv" min="0" max="2" step="0.05">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>نسب التكلفة الإضافية</h2>
+      <div class="fields">
+        <div class="field">
+          <label for="freight">شحن وتخليص (من قيمة العتاد)</label>
+          <input type="number" id="freight" data-bind="freight" min="0" max="0.6" step="0.01">
+        </div>
+        <div class="field">
+          <label for="install">تركيب وتدريب (من قيمة العتاد)</label>
+          <input type="number" id="install" data-bind="install" min="0" max="0.3" step="0.01">
+        </div>
+        <div class="field">
+          <label for="cont">احتياطي طوارئ</label>
+          <input type="number" id="cont" data-bind="contingency" min="0" max="0.5" step="0.01">
+        </div>
+        <div class="field">
+          <label for="openstock">مخزون افتتاحي كواشف ومستهلكات ($)</label>
+          <input type="number" id="openstock" data-bind="stock_opening" min="0" step="50">
+        </div>
+        <div class="field">
+          <label for="svc">عقد صيانة سنوي (من قيمة العتاد)</label>
+          <input type="number" id="svc" data-bind="A.service_contract_pct" min="0" max="0.15" step="0.0025">
+        </div>
+        <div class="field">
+          <label for="vcmult">معامل تكلفة الكواشف</label>
+          <input type="number" id="vcmult" data-bind="A.vc_mult" min="0.3" max="3" step="0.05">
+          <span class="hint">1.3 = كواشف أغلى 30%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- --------------------------------------------------------- tab: monthly -->
+  <section data-panel="monthly" hidden>
+    <div class="card">
+      <h2>النتائج شهراً بشهر — الحالة الأساسية</h2>
+      <p class="sub">كل الأرقام بالدولار · يمكن طباعة الجدول مباشرة</p>
+      <div id="monthly-cards" class="stack-cards"></div>
+      <div class="tw only-wide">
+        <table class="tbl" id="monthly-table">
+          <thead>
+            <tr>
+              <th>الشهر</th><th class="num">مرضى/يوم</th><th class="num">طلبات/يوم</th>
+              <th class="num">فنيون</th><th class="num">إيراد صافٍ</th><th class="num">كواشف</th>
+              <th class="num">أجور</th><th class="num">ثابتة</th><th class="num">EBITDA</th>
+              <th class="num">هامش</th><th class="num">تدفق حر</th><th class="num">تراكمي</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>مقارنة السيناريوهات</h2>
+      <p class="sub">نفس المدخلات، ثلاثة أحجام للطلب</p>
+      <div class="tw">
+        <table class="tbl" id="scenario-table">
+          <thead>
+            <tr><th>السيناريو</th><th class="num">الحجم</th><th class="num">إيراد س1</th>
+                <th class="num">EBITDA س1</th><th class="num">EBITDA س2</th>
+                <th class="num">الاسترداد</th><th class="num">احتياج نقدي</th><th class="num">NPV</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <div class="note" style="margin-top:6px">
+    <strong>تنبيه:</strong> هذه لوحة قرار لا عرض سعر. الأسعار التي أدخلتها أنت أو الموردون هي أرقام حقيقية،
+    أما التكاليف المعلّمة بـ «تقدير» فيجب استبدالها بعرض سعر مكتوب قبل أي التزام مالي.
+    التفاصيل الكاملة والمنهجية في <a href="study.html">دراسة الجدوى</a>.
+  </div>
+</main>
+
+<footer class="foot">
+  <p>لوحة القرار — معمل طبي، أركوت/الخرطوم · نموذج 36 شهراً</p>
+  <p class="small">أرقامك محفوظة في متصفحك فقط. لا حساب، لا إرسال بيانات.</p>
+</footer>
+
+<script src="assets/engine.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
