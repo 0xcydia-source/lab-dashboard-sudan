@@ -16,7 +16,7 @@
     return Number(x).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
   }
   function usd(x, d) { return nf(x, d) + "$"; }
-  function sdg(x) { return nf(x) + " ج.س"; }   // SDG, not EGP
+  function sdg(x) { return nf(x) + " SDG"; }   // SDG, not EGP
   function pct(x, d) { return nf(x, d == null ? 0 : d) + "%"; }
   function esc(s) {
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -41,18 +41,18 @@
       preset: "custom",
       A: Object.assign({}, s.A),
       menu: [
-        { key: "t1", label: "فحص 1", price_usd: 0, vc: 0, tech_min: 5, share: 1, phase: 1, note: "" },
-        { key: "t2", label: "فحص 2", price_usd: 0, vc: 0, tech_min: 5, share: 0, phase: 1, note: "" }
+        { key: "t1", label: "Test 1", price_usd: 0, vc: 0, tech_min: 5, share: 1, phase: 1, note: "" },
+        { key: "t2", label: "Test 2", price_usd: 0, vc: 0, tech_min: 5, share: 0, phase: 1, note: "" }
       ],
       capex_p1: [
-        { item: "جهاز 1", qty: 1, unit: 0, src: "custom", note: "" },
-        { item: "بند 2", qty: 1, unit: 0, src: "custom", note: "" }
+        { item: "Machine 1", qty: 1, unit: 0, src: "custom", note: "" },
+        { item: "Item 2", qty: 1, unit: 0, src: "custom", note: "" }
       ],
-      capex_p2: [{ item: "بند", qty: 1, unit: 0, src: "custom", note: "" }],
-      capex_p3: [{ item: "بند", qty: 1, unit: 0, src: "custom", note: "" }],
+      capex_p2: [{ item: "Item", qty: 1, unit: 0, src: "custom", note: "" }],
+      capex_p3: [{ item: "Item", qty: 1, unit: 0, src: "custom", note: "" }],
       fixed_opex: [
-        { label: "إيجار", usd: 0 },
-        { label: "راتب", usd: 0 }
+        { label: "Rent", usd: 0 },
+        { label: "Salary", usd: 0 }
       ],
       lab: Object.assign({}, s.lab),
       ramp: s.ramp.slice(),
@@ -115,14 +115,14 @@
       try {
         localStorage.setItem(STORE, JSON.stringify(state));
         var el = $("#save-state");
-        el.textContent = "محفوظ";
+        el.textContent = "Saved";
         el.className = "pill g";
         setTimeout(function () {
-          el.textContent = "محفوظ تلقائياً";
+          el.textContent = "Saved automatically";
           el.className = "pill";
         }, 1400);
       } catch (e) {
-        $("#save-state").textContent = "تعذّر الحفظ";
+        $("#save-state").textContent = "Save failed";
         $("#save-state").className = "pill r";
       }
     }, 250);
@@ -168,8 +168,8 @@
     var hint = $("#empty-hint");
     if (hint) hint.hidden = !isBlank;
     var pb = m.payback_months === null
-      ? { v: "لا يحدث", s: "خلال 36 شهراً", c: "bad" }
-      : { v: nf(m.payback_months, 1) + " شهر", s: "لا تشمل قيمة بيعية",
+      ? { v: "Never", s: "within 36 months", c: "bad" }
+      : { v: nf(m.payback_months, 1) + " mo", s: "excludes terminal value",
           c: m.payback_months <= 18 ? "good" : "warn" };
 
     var npvC = m.npv22 > 0 ? "good" : "bad";
@@ -177,20 +177,20 @@
       : (m.be_orders_day <= m.m12_orders_day ? "good" : "warn");
 
     var cards = [
-      { k: "إجمالي الاستثمار (3 مراحل)", v: usd(m.capex_total),
-        s: "منها " + usd(m.p1) + " للمرحلة 1", c: "" },
-      { k: "النقد المطلوب قبل الافتتاح", v: usd(m.funding_need),
-        s: "أسوأ نقطة: الشهر " + m.trough_month, c: "warn" },
-      { k: "استرداد رأس المال", v: pb.v, s: pb.s, c: pb.c },
-      { k: "هامش EBITDA (شهر 12)", v: isFinite(m.m12_margin) ? pct(m.m12_margin) : "—",
-        s: "إيراد " + usd(m.m12_rev) + "/شهر",
+      { k: "Total investment (3 phases)", v: usd(m.capex_total),
+        s: usd(m.p1) + " in phase 1", c: "" },
+      { k: "Cash needed to open", v: usd(m.funding_need),
+        s: "lowest point: month " + m.trough_month, c: "warn" },
+      { k: "Payback", v: pb.v, s: pb.s, c: pb.c },
+      { k: "EBITDA margin (month 12)", v: isFinite(m.m12_margin) ? pct(m.m12_margin) : "—",
+        s: usd(m.m12_rev) + " revenue / month",
         c: !isFinite(m.m12_margin) ? "" : m.m12_margin >= 30 ? "good" : "warn" },
-      { k: "نقطة التعادل",
-        v: (m.be_orders_day === null || !isFinite(m.be_orders_day)) ? "—" : nf(m.be_orders_day, 1) + " طلب/يوم",
+      { k: "Break-even",
+        v: (m.be_orders_day === null || !isFinite(m.be_orders_day)) ? "—" : nf(m.be_orders_day, 1) + " orders/day",
         s: (m.be_patients_day === null || !isFinite(m.be_patients_day))
-            ? "أدخل الأسعار والتكاليف" : "≈ " + nf(m.be_patients_day, 0) + " مريضاً/يوم", c: beC },
-      { k: "صافي القيمة الحالية (22%)", v: usd(m.npv22),
-        s: "36 شهراً" + (m.irr_annual === null ? "" : " · IRR " + nf(m.irr_annual) + "%"), c: npvC }
+            ? "enter prices and costs" : "about " + nf(m.be_patients_day, 0) + " patients/day", c: beC },
+      { k: "Net present value (22%)", v: usd(m.npv22),
+        s: "36 months" + (m.irr_annual === null ? "" : " · IRR " + nf(m.irr_annual) + "%"), c: npvC }
     ];
 
     $("#kpis").innerHTML = cards.map(function (c) {
@@ -241,7 +241,7 @@
       return "<tr>" +
         '<td class="name"><input class="nameinput" type="text" ' +
           'data-menu="' + i + '" data-field="label" value="' + esc(item.label) + '" ' +
-          'title="اكتب اسم الفحص كما تريده"></td>' +
+          'title="Rename this test"></td>' +
         '<td class="num"><input type="number" step="0.25" min="0" ' +
           'data-menu="' + i + '" data-field="price_usd" value="' + item.price_usd + '"></td>' +
         '<td class="num"><input type="number" step="0.05" min="0" ' +
@@ -254,7 +254,7 @@
           'data-menu="' + i + '" data-field="tech_min" value="' + item.tech_min + '"></td>' +
         '<td class="num" data-derived="n:' + i + '">' + nf(per.n, 0) + "</td>" +
         '<td class="num"><button class="btn sm ghost" data-del="menu" data-i="' + i +
-          '" title="حذف الفحص">✕</button></td>' +
+          '" title="Delete test">✕</button></td>' +
         "</tr>";
     }).join("");
 
@@ -271,20 +271,20 @@
             'data-menu="' + i + '" data-field="label" value="' + esc(item.label) + '">' +
           '<span style="display:flex;gap:6px;align-items:center;flex:none">' +
             '<span class="pill ' + cls + '" data-derived="mgc:' + i + '">' + nf(margin) + "%</span>" +
-            '<button class="btn sm ghost" data-del="menu" data-i="' + i + '" title="حذف">✕</button>' +
+            '<button class="btn sm ghost" data-del="menu" data-i="' + i + '" title="Delete">✕</button>' +
           "</span></div>" +
           '<div class="tcard-g">' +
-            '<div class="field"><label>السعر ($)</label><input type="number" step="0.25" min="0" ' +
+            '<div class="field"><label>Price ($)</label><input type="number" step="0.25" min="0" ' +
               'data-menu="' + i + '" data-field="price_usd" value="' + item.price_usd + '"></div>' +
-            '<div class="field"><label>تكلفة الكواشف ($)</label><input type="number" step="0.05" min="0" ' +
+            '<div class="field"><label>Reagent cost ($)</label><input type="number" step="0.05" min="0" ' +
               'data-menu="' + i + '" data-field="vc" value="' + item.vc + '"></div>' +
-            '<div class="field"><label>حصة الطلب</label><input type="number" step="0.005" min="0" max="1" ' +
+            '<div class="field"><label>Order share</label><input type="number" step="0.005" min="0" max="1" ' +
               'data-menu="' + i + '" data-field="share" value="' + item.share + '"></div>' +
-            '<div class="field"><label>دقائق فني</label><input type="number" step="0.5" min="0.5" ' +
+            '<div class="field"><label>Tech minutes</label><input type="number" step="0.5" min="0.5" ' +
               'data-menu="' + i + '" data-field="tech_min" value="' + item.tech_min + '"></div>' +
           "</div>" +
-          '<div class="tcard-f"><span data-derived="cmc:' + i + '">مساهمة ' + usd(cm, 2) + '/طلب</span>' +
-            '<span data-derived="nc:' + i + '">' + nf(per.n, 0) + " طلب/شهر</span></div>" +
+          '<div class="tcard-f"><span data-derived="cmc:' + i + '">' + usd(cm, 2) + ' / order</span>' +
+            '<span data-derived="nc:' + i + '">' + nf(per.n, 0) + " orders/mo</span></div>" +
           "</div>";
       }).join("");
     }
@@ -296,7 +296,7 @@
       revSum += r12.per[k].revenue;
       cmSum += r12.per[k].contribution;
     });
-    tfoot.innerHTML = "<tr class='total'><td>الإجمالي / المتوسط</td>" +
+    tfoot.innerHTML = "<tr class='total'><td>Total / average</td>" +
       "<td class='num'>—</td><td class='num'>—</td>" +
       "<td class='num' id='mt-share'>" + nf(shareSum * 100) + "%</td>" +
       "<td class='num' id='mt-cm'>" + nf(cmSum / (r12.orders || 1), 2) + "</td>" +
@@ -305,13 +305,13 @@
       "<td class='num' id='mt-n'>" + nf(r12.orders) + "</td><td></td></tr>";
 
     var warn = Math.abs(shareSum - 1) > 0.02
-      ? '<div class="note" style="margin:10px 0 0">مجموع الحصص ' + nf(shareSum * 100) +
-        "% — سيُعاد توزيعها تلقائياً على 100% عند الحساب. عدّل الحصص إن أردت مزيجاً مختلفاً.</div>"
+      ? '<div class="note" style="margin:10px 0 0">Shares add up to ' + nf(shareSum * 100) +
+        "% — shares are normalised to 100% when computing. Edit them for a different mix.</div>"
       : "";
     $("#menu-note").innerHTML = warn +
-      "عمود «مساهمة» = السعر بالدولار ناقص تكلفة الكواشف. عمود «هامش» نسبته من السعر. " +
-      "«طلبات/شهر» محسوبة من الشهر 12 بالحجم الحالي.";
-    $("#menu-count").textContent = state.menu.length + " فحصاً";
+      "Contribution = USD price minus reagent cost. Margin is the same as a % of price. " +
+      "Orders/month is month-12 volume at the current size.";
+    $("#menu-count").textContent = state.menu.length + " tests";
   }
 
   /* Update only the computed cells of the test table. Rebuilding the whole
@@ -328,8 +328,8 @@
       var per = r12.per[item.key] || { n: 0 };
       setTxt('[data-derived="cm:' + i + '"]', nf(cm, 2));
       setTxt('[data-derived="n:' + i + '"]', nf(per.n));
-      setTxt('[data-derived="cmc:' + i + '"]', "مساهمة " + usd(cm, 2) + "/طلب");
-      setTxt('[data-derived="nc:' + i + '"]', nf(per.n) + " طلب/شهر");
+      setTxt('[data-derived="cmc:' + i + '"]', usd(cm, 2) + " / order");
+      setTxt('[data-derived="nc:' + i + '"]', nf(per.n) + " orders/mo");
       setPill('[data-derived="mg:' + i + '"]', nf(margin) + "%", cls);
       setPill('[data-derived="mgc:' + i + '"]', nf(margin) + "%", cls);
     });
@@ -365,19 +365,19 @@
         '<td class="num"><input type="number" min="0" step="1" data-cx="1" data-i="' + i + '" data-f="qty" value="' + c.qty + '"></td>' +
         '<td class="num"><input type="number" min="0" step="25" data-cx="1" data-i="' + i + '" data-f="unit" value="' + c.unit + '"></td>' +
         '<td class="num">' + usd(c.qty * c.unit) + "</td>" +
-        '<td><span class="pill">' + (c.src === "own" ? "مقدَّم منك" : "تقدير") + "</span></td>" +
-        '<td class="num"><button class="btn sm ghost" data-del="capex_p1" data-i="' + i + '" title="حذف">✕</button></td>' +
+        '<td><span class="pill">' + (c.src === "own" ? "your quote" : "estimate") + "</span></td>" +
+        '<td class="num"><button class="btn sm ghost" data-del="capex_p1" data-i="' + i + '" title="Delete">✕</button></td>' +
         "</tr>";
     }).join("");
 
     var cx = results.base.capex;
     $("#capex1-table tfoot").innerHTML =
-      "<tr class='total'><td>عتاد</td><td></td><td></td><td class='num'>" + usd(cx.hardware) + "</td><td colspan='2'></td></tr>" +
-      "<tr><td>شحن وتخليص " + nf(state.freight * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.freight) + "</td><td colspan='2'></td></tr>" +
-      "<tr><td>تركيب وتدريب " + nf(state.install * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.install) + "</td><td colspan='2'></td></tr>" +
-      "<tr><td>مخزون افتتاحي</td><td></td><td></td><td class='num'>" + usd(cx.stock) + "</td><td colspan='2'></td></tr>" +
-      "<tr><td>احتياطي طوارئ " + nf(state.contingency * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.contingency) + "</td><td colspan='2'></td></tr>" +
-      "<tr class='total'><td>إجمالي المرحلة 1</td><td></td><td></td><td class='num'>" + usd(cx.p1) + "</td><td colspan='2'></td></tr>";
+      "<tr class='total'><td>Equipment</td><td></td><td></td><td class='num'>" + usd(cx.hardware) + "</td><td colspan='2'></td></tr>" +
+      "<tr><td>Freight and clearance " + nf(state.freight * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.freight) + "</td><td colspan='2'></td></tr>" +
+      "<tr><td>Install and training " + nf(state.install * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.install) + "</td><td colspan='2'></td></tr>" +
+      "<tr><td>Opening stock</td><td></td><td></td><td class='num'>" + usd(cx.stock) + "</td><td colspan='2'></td></tr>" +
+      "<tr><td>Contingency " + nf(state.contingency * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.contingency) + "</td><td colspan='2'></td></tr>" +
+      "<tr class='total'><td>Phase 1 total</td><td></td><td></td><td class='num'>" + usd(cx.p1) + "</td><td colspan='2'></td></tr>";
 
     [2, 3].forEach(function (ph) {
       var key = "capex_p" + ph;
@@ -386,12 +386,12 @@
         return "<tr>" +
           '<td><input class="wide" type="text" data-cx="' + ph + '" data-i="' + i + '" data-f="item" value="' + esc(c.item) + '"></td>' +
           '<td class="num"><input type="number" min="0" step="25" data-cx="' + ph + '" data-i="' + i + '" data-f="unit" value="' + c.unit + '"></td>' +
-          '<td class="num"><button class="btn sm ghost" data-del="' + key + '" data-i="' + i + '" title="حذف">✕</button></td>' +
+          '<td class="num"><button class="btn sm ghost" data-del="' + key + '" data-i="' + i + '" title="Delete">✕</button></td>' +
           "</tr>";
       }).join("");
       var tot = state[key].reduce(function (s, c) { return s + c.qty * c.unit; }, 0);
       $("#capex" + ph + "-table tfoot").innerHTML =
-        "<tr class='total'><td>الإجمالي</td><td class='num'>" + usd(tot) + "</td><td></td></tr>";
+        "<tr class='total'><td>Total</td><td class='num'>" + usd(tot) + "</td><td></td></tr>";
     });
 
     // phone cards mirror the same rows
@@ -401,15 +401,15 @@
         return '<div class="tcard"><div class="tcard-h">' +
           '<input class="nameinput" type="text" data-cx="1" data-i="' + i +
             '" data-f="item" value="' + esc(c.item) + '">' +
-          '<button class="btn sm ghost" data-del="capex_p1" data-i="' + i + '" title="حذف">✕</button></div>' +
+          '<button class="btn sm ghost" data-del="capex_p1" data-i="' + i + '" title="Delete">✕</button></div>' +
           '<div class="tcard-g">' +
-            '<div class="field"><label>العدد</label><input type="number" min="0" step="1" ' +
+            '<div class="field"><label>Qty</label><input type="number" min="0" step="1" ' +
               'data-cx="1" data-i="' + i + '" data-f="qty" value="' + c.qty + '"></div>' +
-            '<div class="field"><label>سعر الوحدة ($)</label><input type="number" min="0" step="25" ' +
+            '<div class="field"><label>Unit price ($)</label><input type="number" min="0" step="25" ' +
               'data-cx="1" data-i="' + i + '" data-f="unit" value="' + c.unit + '"></div>' +
           "</div>" +
-          '<div class="tcard-f"><span>الإجمالي ' + usd(c.qty * c.unit) + "</span>" +
-          "<span>" + (c.src === "own" ? "مقدَّم منك" : "تقدير") + "</span></div></div>";
+          '<div class="tcard-f"><span>Total ' + usd(c.qty * c.unit) + "</span>" +
+          "<span>" + (c.src === "own" ? "your quote" : "estimate") + "</span></div></div>";
       }).join("");
     }
     [2, 3].forEach(function (ph) {
@@ -419,8 +419,8 @@
         return '<div class="tcard"><div class="tcard-h">' +
           '<input class="nameinput" type="text" data-cx="' + ph + '" data-i="' + i +
             '" data-f="item" value="' + esc(c.item) + '">' +
-          '<button class="btn sm ghost" data-del="capex_p' + ph + '" data-i="' + i + '" title="حذف">✕</button></div>' +
-          '<div class="tcard-g"><div class="field"><label>السعر ($)</label>' +
+          '<button class="btn sm ghost" data-del="capex_p' + ph + '" data-i="' + i + '" title="Delete">✕</button></div>' +
+          '<div class="tcard-g"><div class="field"><label>Price ($)</label>' +
             '<input type="number" min="0" step="25" data-cx="' + ph + '" data-i="' + i +
             '" data-f="unit" value="' + c.unit + '"></div></div></div>';
       }).join("");
@@ -433,12 +433,12 @@
     var t1 = document.querySelector("#capex1-table tfoot");
     if (t1) {
       t1.innerHTML =
-        "<tr class='total'><td>عتاد</td><td></td><td></td><td class='num'>" + usd(cx.hardware) + "</td><td colspan='2'></td></tr>" +
-        "<tr><td>شحن وتخليص " + nf(state.freight * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.freight) + "</td><td colspan='2'></td></tr>" +
-        "<tr><td>تركيب وتدريب " + nf(state.install * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.install) + "</td><td colspan='2'></td></tr>" +
-        "<tr><td>مخزون افتتاحي</td><td></td><td></td><td class='num'>" + usd(cx.stock) + "</td><td colspan='2'></td></tr>" +
-        "<tr><td>احتياطي طوارئ " + nf(state.contingency * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.contingency) + "</td><td colspan='2'></td></tr>" +
-        "<tr class='total'><td>إجمالي المرحلة 1</td><td></td><td></td><td class='num'>" + usd(cx.p1) + "</td><td colspan='2'></td></tr>";
+        "<tr class='total'><td>Equipment</td><td></td><td></td><td class='num'>" + usd(cx.hardware) + "</td><td colspan='2'></td></tr>" +
+        "<tr><td>Freight and clearance " + nf(state.freight * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.freight) + "</td><td colspan='2'></td></tr>" +
+        "<tr><td>Install and training " + nf(state.install * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.install) + "</td><td colspan='2'></td></tr>" +
+        "<tr><td>Opening stock</td><td></td><td></td><td class='num'>" + usd(cx.stock) + "</td><td colspan='2'></td></tr>" +
+        "<tr><td>Contingency " + nf(state.contingency * 100) + "%</td><td></td><td></td><td class='num'>" + usd(cx.contingency) + "</td><td colspan='2'></td></tr>" +
+        "<tr class='total'><td>Phase 1 total</td><td></td><td></td><td class='num'>" + usd(cx.p1) + "</td><td colspan='2'></td></tr>";
     }
     state.capex_p1.forEach(function (c, i) {
       var cell = document.querySelector('[data-cx="1"][data-i="' + i + '"][data-f="unit"]');
@@ -449,7 +449,7 @@
     [2, 3].forEach(function (ph) {
       var tot = state["capex_p" + ph].reduce(function (a, c) { return a + c.qty * c.unit; }, 0);
       var tf = document.querySelector("#capex" + ph + "-table tfoot");
-      if (tf) tf.innerHTML = "<tr class='total'><td>الإجمالي</td><td class='num'>" + usd(tot) + "</td><td></td></tr>";
+      if (tf) tf.innerHTML = "<tr class='total'><td>Total</td><td class='num'>" + usd(tot) + "</td><td></td></tr>";
     });
   }
 
@@ -459,11 +459,11 @@
     var tf = document.querySelector("#opex-table tfoot");
     if (tf) {
       tf.innerHTML =
-        "<tr class='total'><td>إجمالي الثابتة</td><td class='num'>" + usd(sum) +
+        "<tr class='total'><td>Fixed cost total</td><td class='num'>" + usd(sum) +
         "</td><td class='num'>" + usd(sum * 12) + "</td><td></td></tr>" +
-        "<tr><td>أجور الفريق (تُحسب تلقائياً)</td><td class='num'>" + usd(lab) +
+        "<tr><td>Staff wages (auto)</td><td class='num'>" + usd(lab) +
         "</td><td class='num'>" + usd(lab * 12) + "</td><td></td></tr>" +
-        "<tr class='total'><td>الإجمالي الشهري</td><td class='num'>" + usd(sum + lab) +
+        "<tr class='total'><td>Monthly total</td><td class='num'>" + usd(sum + lab) +
         "</td><td class='num'>" + usd((sum + lab) * 12) + "</td><td></td></tr>";
     }
     state.fixed_opex.forEach(function (o, i) {
@@ -485,18 +485,18 @@
         '<td><input class="wide" type="text" data-op="1" data-i="' + i + '" data-f="label" value="' + esc(o.label) + '"></td>' +
         '<td class="num"><input type="number" min="0" step="10" data-op="1" data-i="' + i + '" data-f="usd" value="' + o.usd + '"></td>' +
         '<td class="num">' + usd(o.usd * 12) + "</td>" +
-        '<td class="num"><button class="btn sm ghost" data-del="fixed_opex" data-i="' + i + '" title="حذف">✕</button></td>' +
+        '<td class="num"><button class="btn sm ghost" data-del="fixed_opex" data-i="' + i + '" title="Delete">✕</button></td>' +
         "</tr>";
     }).join("");
 
     var sum = state.fixed_opex.reduce(function (s, o) { return s + o.usd; }, 0);
     var lab = results.base.months[11].labour;
     $("#opex-table tfoot").innerHTML =
-      "<tr class='total'><td>إجمالي الثابتة</td><td class='num'>" + usd(sum) +
+      "<tr class='total'><td>Fixed cost total</td><td class='num'>" + usd(sum) +
       "</td><td class='num'>" + usd(sum * 12) + "</td><td></td></tr>" +
-      "<tr><td>أجور الفريق (تُحسب تلقائياً)</td><td class='num'>" + usd(lab) +
+      "<tr><td>Staff wages (auto)</td><td class='num'>" + usd(lab) +
       "</td><td class='num'>" + usd(lab * 12) + "</td><td></td></tr>" +
-      "<tr class='total'><td>الإجمالي الشهري</td><td class='num'>" + usd(sum + lab) +
+      "<tr class='total'><td>Monthly total</td><td class='num'>" + usd(sum + lab) +
       "</td><td class='num'>" + usd((sum + lab) * 12) + "</td><td></td></tr>";
 
     var oc = $("#opex-cards");
@@ -505,11 +505,11 @@
         return '<div class="tcard"><div class="tcard-h">' +
           '<input class="nameinput" type="text" data-op="1" data-i="' + i +
             '" data-f="label" value="' + esc(o.label) + '">' +
-          '<button class="btn sm ghost" data-del="fixed_opex" data-i="' + i + '" title="حذف">✕</button></div>' +
-          '<div class="tcard-g"><div class="field"><label>شهرياً ($)</label>' +
+          '<button class="btn sm ghost" data-del="fixed_opex" data-i="' + i + '" title="Delete">✕</button></div>' +
+          '<div class="tcard-g"><div class="field"><label>Monthly ($)</label>' +
             '<input type="number" min="0" step="10" data-op="1" data-i="' + i +
             '" data-f="usd" value="' + o.usd + '"></div>' +
-            '<div class="field"><label>سنوياً</label><input type="text" value="' +
+            '<div class="field"><label>Yearly</label><input type="text" value="' +
             usd(o.usd * 12) + '" disabled></div></div></div>';
       }).join("");
     }
@@ -543,19 +543,19 @@
         var mg = r.rev > 0 ? r.ebitda / r.rev * 100 : 0;
         var cls = mg >= 25 ? "g" : mg >= 0 ? "a" : "r";
         return '<div class="tcard mrow">' +
-          '<div class="tcard-h"><span>الشهر ' + r.month + " · " + r.y + "-" + (r.m < 10 ? "0" : "") + r.m +
+          '<div class="tcard-h"><span>Month ' + r.month + " · " + r.y + "-" + (r.m < 10 ? "0" : "") + r.m +
             '</span><span class="pill ' + cls + '">EBITDA ' + nf(mg) + "%</span></div>" +
           '<div class="mrow-g">' +
-            "<span>مرضى/يوم<b>" + nf(r.patients) + "</b></span>" +
-            "<span>طلبات/يوم<b>" + nf(r.orders_day) + "</b></span>" +
-            "<span>فنيون<b>" + r.techs + "</b></span>" +
-            "<span>إيراد صافٍ<b>" + usd(r.rev) + "</b></span>" +
-            "<span>كواشف<b>" + usd(r["var"]) + "</b></span>" +
-            "<span>أجور<b>" + usd(r.labour) + "</b></span>" +
-            "<span>ثابتة<b>" + usd(r.fixed) + "</b></span>" +
+            "<span>Patients/day<b>" + nf(r.patients) + "</b></span>" +
+            "<span>Orders/day<b>" + nf(r.orders_day) + "</b></span>" +
+            "<span>Techs<b>" + r.techs + "</b></span>" +
+            "<span>Net revenue<b>" + usd(r.rev) + "</b></span>" +
+            "<span>Reagents<b>" + usd(r["var"]) + "</b></span>" +
+            "<span>Wages<b>" + usd(r.labour) + "</b></span>" +
+            "<span>Fixed<b>" + usd(r.fixed) + "</b></span>" +
             "<span>EBITDA<b>" + usd(r.ebitda) + "</b></span>" +
-            "<span>تدفق حر<b>" + usd(r.fcf) + "</b></span>" +
-            "<span>تراكمي<b>" + usd(r.cum) + "</b></span>" +
+            "<span>Free cash flow<b>" + usd(r.fcf) + "</b></span>" +
+            "<span>Cumulative<b>" + usd(r.cum) + "</b></span>" +
           "</div></div>";
       }).join("");
     }
@@ -618,7 +618,7 @@
 
   function kFmt(v) {
     var a = Math.abs(v);
-    if (a >= 1e6) return (v / 1e6).toFixed(1) + "م";
+    if (a >= 1e6) return (v / 1e6).toFixed(1) + "M";
     if (a >= 1000) return (v / 1000).toFixed(0) + "k";
     return String(Math.round(v));
   }
@@ -663,9 +663,9 @@
 
     var m = results.m;
     $("#cashflow-note").textContent = m.payback_months === null
-      ? "الحالة الأساسية لا تسترد رأس المال خلال 36 شهراً بالمدخلات الحالية."
-      : "الاسترداد في الحالة الأساسية: " + nf(m.payback_months, 1) + " شهراً. " +
-        "التدفق التراكمي بعد 36 شهراً: " + usd(m.m36_cum) + ". المحور الأفقي: الشهر من الافتتاح.";
+      ? "The base case does not pay back within 36 months with the current inputs."
+      : "Base-case payback: " + nf(m.payback_months, 1) + " months. " +
+        "Cumulative cash after 36 months: " + usd(m.m36_cum) + ".";
   }
 
   function drawBreakeven() {
@@ -675,7 +675,7 @@
     var svg = f.svg, W = f.w, H = f.h;
     var m = results.m;
     if (m.be_orders_day === null) {
-      host.innerHTML = '<p class="empty">هامش المساهمة سالب — راجع الأسعار والتكاليف.</p>';
+      host.innerHTML = '<p class="empty">Contribution margin is negative - check prices and costs.</p>';
       return;
     }
     var maxX = Math.max(120, Math.ceil(m.be_orders_day * 1.6), Math.ceil(m.m12_orders_day * 1.3));
@@ -702,14 +702,14 @@
     svg.appendChild(svgEl("circle", { cx: X(m.m12_orders_day), cy: Y(m.m12_orders_day * cmDay),
       r: 4.5, fill: "#12507a" }));
 
-    svgText(svg, "التعادل " + nf(m.be_orders_day, 0) + " طلب/يوم",
+    svgText(svg, "Break-even " + nf(m.be_orders_day, 0) + " orders/day",
             X(m.be_orders_day) - 6, Y(hiY * 0.88), { anchor: "start", rtl: true, fill: "#4a5866" });
-    svgText(svg, "طلبات / يوم", (X(0) + X(maxX)) / 2, H - 6,
+    svgText(svg, "Orders per day", (X(0) + X(maxX)) / 2, H - 6,
             { anchor: "middle", rtl: true });
 
     $("#breakeven-note").textContent =
-      "التكاليف الثابتة " + usd(fixed) + "/شهر · هامش المساهمة " + usd(m.cm_usd, 2) +
-      " لكل طلب · هامش الأمان في الشهر 12: " + pct(m.mos_pct) + ".";
+      "Fixed cost " + usd(fixed) + "/mo - contribution " + usd(m.cm_usd, 2) +
+      " per order - month-12 safety margin " + pct(m.mos_pct) + ".";
   }
 
   function drawMonthly() {
@@ -751,12 +751,12 @@
     if (!host) return;
     var r = results.base.months[11];
     var items = [
-      ["كواشف ومستهلكات", r["var"], "#12507a"],
-      ["أجور", r.labour, "#c8860d"],
-      ["تكاليف ثابتة", r.fixed, "#7d8b99"],
-      ["مستهلكات سحب", r.collect, "#4b7f9e"],
-      ["عمولة إحالة", r.referral, "#b06a2c"],
-      ["تسرب إيراد", r.rev_gross - r.rev - r.referral, "#c0a08a"]
+      ["Reagents & consumables", r["var"], "#12507a"],
+      ["Wages", r.labour, "#c8860d"],
+      ["Fixed costs", r.fixed, "#7d8b99"],
+      ["Collection consumables", r.collect, "#4b7f9e"],
+      ["Referral commission", r.referral, "#b06a2c"],
+      ["Revenue leakage", r.rev_gross - r.rev - r.referral, "#c0a08a"]
     ].filter(function (x) { return x[1] > 0.5; });
     var total = items.reduce(function (s, x) { return s + x[1]; }, 0);
     var rows = items.map(function (x) {
@@ -779,8 +779,8 @@
     }).join("");
     host.innerHTML = '<div style="display:flex;border-radius:6px;overflow:hidden;margin:4px 0 12px">' +
       segs + "</div>" + rows +
-      '<p class="chart-note" style="margin-top:10px">إجمالي التكلفة النقدية ' + usd(total) +
-      " من إيراد إجمالي " + usd(r.rev_gross) + " · هامش EBITDA " + pct(results.m.m12_margin) + ".</p>";
+      '<p class="chart-note" style="margin-top:10px">Total cash cost ' + usd(total) +
+      " on gross revenue " + usd(r.rev_gross) + " - EBITDA margin " + pct(results.m.m12_margin) + ".</p>";
   }
 
   function drawTornado() {
@@ -788,32 +788,32 @@
     if (!host) return;
     var st = results.st;
     var tests = [
-      ["حجم الطلب اليومي", function (v) { return M.metrics(M.run(st, { vol: v })).npv22; }, 0.6, 1.4, "%"],
-      ["سعر البيع الحقيقي", function (v) {
+      ["Daily order volume", function (v) { return M.metrics(M.run(st, { vol: v })).npv22; }, 0.6, 1.4, "%"],
+      ["Real selling price", function (v) {
         var s2 = Object.assign({}, st, { A: Object.assign({}, st.A, { price_index: st.A.price_index * v }) });
         return M.metrics(M.run(s2, {})).npv22;
       }, 0.85, 1.15, "%"],
-      ["تكلفة الكواشف", function (v) {
+      ["Reagent cost", function (v) {
         var s2 = Object.assign({}, st, { A: Object.assign({}, st.A, { vc_mult: v }) });
         return M.metrics(M.run(s2, {})).npv22;
       }, 0.65, 1.45, "%"],
-      ["طلبات لكل مريض", function (v) {
+      ["Tests per patient", function (v) {
         var s2 = Object.assign({}, st, { A: Object.assign({}, st.A, { tests_per_patient: v }) });
         return M.metrics(M.run(s2, {})).npv22;
       }, 1.2, 1.85, "x"],
-      ["تمرير سعر الصرف", function (v) {
+      ["FX pass-through", function (v) {
         var s2 = Object.assign({}, st, { A: Object.assign({}, st.A, { pass_through: v }) });
         return M.metrics(M.run(s2, {})).npv22;
       }, 0.5, 1.0, "%"],
-      ["انخفاض الجنيه", function (v) {
+      ["SDG depreciation", function (v) {
         var s2 = Object.assign({}, st, { A: Object.assign({}, st.A, { fx_drift: v }) });
         return M.metrics(M.run(s2, {})).npv22;
       }, 0.10, 0.60, "%"],
-      ["تكاليف ثابتة", function (v) {
+      ["Fixed costs", function (v) {
         var s2 = Object.assign({}, st, { A: Object.assign({}, st.A, { opex_mult: v }) });
         return M.metrics(M.run(s2, {})).npv22;
       }, 0.85, 1.20, "%"],
-      ["سعر الأجهزة", function (v) {
+      ["Equipment price", function (v) {
         var s2 = Object.assign({}, st, { A: Object.assign({}, st.A, { capex_mult: v }) });
         return M.metrics(M.run(s2, {})).npv22;
       }, 0.8, 1.3, "%"]
@@ -834,9 +834,9 @@
     // The bars are plain <div>s: RTL text and phones then behave like every
     // other block in the page, and no SVG text anchor can send a label off-screen.
     host.innerHTML = '<div class="legend" style="margin:0 0 10px">' +
-        '<span><i style="background:#a3261f"></i>عند الحد الأدنى</span>' +
-        '<span><i style="background:#1d7a4d"></i>عند الحد الأعلى</span>' +
-        '<span><i style="background:#16212b"></i>الحالة الأساسية (' + usd(base) + ")</span>" +
+        '<span><i style="background:#a3261f"></i>Low end</span>' +
+        '<span><i style="background:#1d7a4d"></i>High end</span>' +
+        '<span><i style="background:#16212b"></i>Base case (' + usd(base) + ")</span>" +
       "</div>" + rows.map(function (r) {
       var a = pos(r.lo), b = pos(r.hi), m = pos(base);
       var x1 = Math.min(a, m), w1 = Math.abs(m - a);
@@ -868,8 +868,8 @@
     var host = $("#ch-capexplit");
     if (!host) return;
     var cx = results.base.capex;
-    var ANALYZERS = /CBC|كيمياء|سنترفيوج|ميكروسكوب|ESR|Vortex|Rotator|ماصات|ميزان|حامل/i;
-    var BASICS = /ثلاجة|مولد|UPS|AVR|تكييف|مقطر|حمام|كمبيوتر|LIS/i;
+    var ANALYZERS = /CBC|chemistr|centrifuge|microscope|ESR|Vortex|Rotator|pipette|balance|stand/i;
+    var BASICS = /fridge|generator|UPS|AVR|AC |still|bath|PC |LIS/i;
     var hw = results.st.capex_p1.map(function (c) { return { item: c.item, total: c.qty * c.unit }; });
     var sum = function (re) {
       return hw.filter(function (x) { return re.test(x.item); })
@@ -878,13 +878,13 @@
     var analyzers = sum(ANALYZERS), basics = sum(BASICS);
     var rest = Math.max(0, cx.hardware - analyzers - basics);
     var groups = [
-      ["أجهزة التحليل والماصات", analyzers, "#12507a"],
-      ["تجهيز وأثاث وتراخيص", rest, "#3f7fa6"],
-      ["أساسيات (ثلاجة/مولد/UPS/تكييف)", basics, "#7ba7c4"],
-      ["شحن وتخليص", cx.freight, "#c8860d"],
-      ["تركيب وتدريب", cx.install, "#d9a54a"],
-      ["مخزون افتتاحي", cx.stock, "#1d7a4d"],
-      ["احتياطي طوارئ", cx.contingency, "#9aa6b2"]
+      ["Analyzers and pipettes", analyzers, "#12507a"],
+      ["Fit-out, furniture, licensing", rest, "#3f7fa6"],
+      ["Essentials (fridge/generator/UPS/AC)", basics, "#7ba7c4"],
+      ["Freight and clearance", cx.freight, "#c8860d"],
+      ["Install and training", cx.install, "#d9a54a"],
+      ["Opening stock", cx.stock, "#1d7a4d"],
+      ["Contingency", cx.contingency, "#9aa6b2"]
     ].filter(function (g) { return g[1] > 1; });
     var total = groups.reduce(function (a, g) { return a + g[1]; }, 0);
     var bar = groups.map(function (g) {
@@ -901,8 +901,8 @@
     }).join("");
     host.innerHTML = '<div style="display:flex;border-radius:7px;overflow:hidden;margin:2px 0 12px">' +
       bar + "</div>" + rows +
-      '<p class="chart-note" style="margin-top:8px">إجمالي الاستثمار ' + usd(total) +
-      " · العتاد " + usd(cx.hardware) + "</p>";
+      '<p class="chart-note" style="margin-top:8px">Total investment ' + usd(total) +
+      " - equipment " + usd(cx.hardware) + "</p>";
   }
 
   /* contribution per technologist-minute — the real ranking of the menu */
@@ -929,13 +929,13 @@
         '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:2px">' +
           '<span style="font-weight:600">' + esc(r.label) + "</span>" +
           '<span style="color:#7b8794;direction:ltr;unicode-bidi:isolate">$' +
-            r.perMin.toFixed(2) + " / دقيقة</span></div>" +
+            r.perMin.toFixed(2) + " / min</span></div>" +
         '<div style="height:12px;background:#f2f5f8;border-radius:4px;overflow:hidden">' +
           '<span style="display:block;height:100%;width:' + (r.perMin / max * 100).toFixed(1) +
           '%;background:#12507a"></span></div>' +
         "</div>";
     }).join("") +
-      '<p class="chart-note">' + nf(rows.length) + " فحصاً نشطاً · أعلى قيمة لكل دقيقة فني: " +
+      '<p class="chart-note">' + nf(rows.length) + " active tests - best value per tech-minute: " +
       esc(top[0].label) + "</p>";
   }
 
@@ -1095,7 +1095,7 @@
           var card = inp.closest(".tcard");
           if (card) {
             var tot = card.querySelector(".tcard-f span");
-            if (tot) tot.textContent = "الإجمالي " + usd(state["capex_p" + ph][i].qty * state["capex_p" + ph][i].unit);
+            if (tot) tot.textContent = "Total " + usd(state["capex_p" + ph][i].qty * state["capex_p" + ph][i].unit);
           }
         }
         onChange();
@@ -1193,66 +1193,66 @@
 
     host.innerHTML =
       '<header class="rpt-head">' +
-        "<h1>" + esc(val("name", "دراسة جدوى معمل طبي")) + "</h1>" +
+        "<h1>" + esc(val("name", "Medical Laboratory Feasibility Study")) + "</h1>" +
         '<p class="rpt-meta">' +
-          esc(val("location", "الموقع غير محدد")) + " · " + esc(val("date", new Date().getFullYear())) +
+          esc(val("location", "Location not set")) + " · " + esc(val("date", new Date().getFullYear())) +
           (plan.owner ? " · " + esc(plan.owner) : "") +
-          (plan.area ? " · " + esc(plan.area) + " م²" : "") +
+          (plan.area ? " - " + esc(plan.area) + " m2" : "") +
         "</p>" +
       "</header>" +
 
       '<section class="rpt-kpis">' + [
-        ["إجمالي الاستثمار", usd(m.capex_total)],
-        ["النقد المطلوب", usd(m.funding_need)],
-        ["الاسترداد", m.payback_months === null ? "لا يحدث" : nf(m.payback_months, 1) + " شهر"],
-        ["EBITDA شهر 12", usd(m.m12_ebitda)],
-        ["التعادل", nf(m.be_orders_day, 1) + " طلب/يوم"],
+        ["Total investment", usd(m.capex_total)],
+        ["Cash needed", usd(m.funding_need)],
+        ["Payback", m.payback_months === null ? "Never" : nf(m.payback_months, 1) + " mo"],
+        ["EBITDA month 12", usd(m.m12_ebitda)],
+        ["Break-even", nf(m.be_orders_day, 1) + " orders/day"],
         ["NPV 22%", usd(m.npv22)]
       ].map(function (k) {
         return '<div class="rk"><span>' + k[0] + "</span><b>" + k[1] + "</b></div>";
       }).join("") + "</section>" +
 
-      (plan.notes ? "<h2>ملخص</h2><p>" + esc(plan.notes) + "</p>" : "") +
+      (plan.notes ? "<h2>Summary</h2><p>" + esc(plan.notes) + "</p>" : "") +
 
-      "<h2>1. التكلفة الرأسمالية</h2>" +
-      "<div class='tw'><table class='tbl'><thead><tr><th>البند</th><th class='num'>العدد</th>" +
-      "<th class='num'>سعر الوحدة</th><th class='num'>الإجمالي</th></tr></thead><tbody>" +
-      rowsCapex + "</tbody><tfoot><tr class='total'><td>العتاد</td><td></td><td></td><td class='num'>" +
-      usd(totalCapex) + "</td></tr><tr><td>شحن " + nf(state.freight * 100) + "%</td><td></td><td></td>" +
+      "<h2>1. Capital expenditure</h2>" +
+      "<div class='tw'><table class='tbl'><thead><tr><th>Item</th><th class='num'>Qty</th>" +
+      "<th class='num'>Unit price</th><th class='num'>Total</th></tr></thead><tbody>" +
+      rowsCapex + "</tbody><tfoot><tr class='total'><td>Equipment</td><td></td><td></td><td class='num'>" +
+      usd(totalCapex) + "</td></tr><tr><td>Freight " + nf(state.freight * 100) + "%</td><td></td><td></td>" +
       "<td class='num'>" + usd(results.base.capex.freight) + "</td></tr>" +
-      "<tr><td>تركيب " + nf(state.install * 100) + "%</td><td></td><td></td><td class='num'>" +
+      "<tr><td>Install " + nf(state.install * 100) + "%</td><td></td><td></td><td class='num'>" +
       usd(results.base.capex.install) + "</td></tr>" +
-      "<tr><td>مخزون افتتاحي</td><td></td><td></td><td class='num'>" + usd(results.base.capex.stock) + "</td></tr>" +
-      "<tr><td>احتياطي " + nf(state.contingency * 100) + "%</td><td></td><td></td><td class='num'>" +
+      "<tr><td>Opening stock</td><td></td><td></td><td class='num'>" + usd(results.base.capex.stock) + "</td></tr>" +
+      "<tr><td>Contingency " + nf(state.contingency * 100) + "%</td><td></td><td></td><td class='num'>" +
       usd(results.base.capex.contingency) + "</td></tr>" +
-      "<tr class='total'><td>إجمالي المرحلة 1</td><td></td><td></td><td class='num'>" +
+      "<tr class='total'><td>Phase 1 total</td><td></td><td></td><td class='num'>" +
       usd(results.base.capex.p1) + "</td></tr></tfoot></table></div>" +
 
-      "<h2>2. قائمة الفحوص والأسعار</h2>" +
-      "<div class='tw'><table class='tbl'><thead><tr><th>الفحص</th><th class='num'>حصة الطلب</th>" +
-      "<th class='num'>السعر</th><th class='num'>الكواشف</th><th class='num'>المساهمة</th>" +
-      "<th class='num'>الهامش</th></tr></thead><tbody>" + rowsMenu + "</tbody></table></div>" +
+      "<h2>2. Test menu and pricing</h2>" +
+      "<div class='tw'><table class='tbl'><thead><tr><th>Test</th><th class='num'>Order share</th>" +
+      "<th class='num'>Price</th><th class='num'>Reagents</th><th class='num'>Contribution</th>" +
+      "<th class='num'>Margin</th></tr></thead><tbody>" + rowsMenu + "</tbody></table></div>" +
 
-      "<h2>3. التكاليف الثابتة</h2>" +
-      "<div class='tw'><table class='tbl'><thead><tr><th>البند</th><th class='num'>شهرياً</th>" +
-      "<th class='num'>سنوياً</th></tr></thead><tbody>" + rowsOpex +
-      "</tbody><tfoot><tr class='total'><td>الإجمالي</td><td class='num'>" +
+      "<h2>3. Fixed monthly costs</h2>" +
+      "<div class='tw'><table class='tbl'><thead><tr><th>Item</th><th class='num'>Monthly</th>" +
+      "<th class='num'>Yearly</th></tr></thead><tbody>" + rowsOpex +
+      "</tbody><tfoot><tr class='total'><td>Total</td><td class='num'>" +
       usd(results.base.fixedBase) + "</td><td class='num'>" +
       usd(results.base.fixedBase * 12) + "</td></tr></tfoot></table></div>" +
 
-      "<h2>4. أول 18 شهراً</h2>" +
-      "<div class='tw'><table class='tbl'><thead><tr><th class='num'>الشهر</th><th class='num'>مرضى/يوم</th>" +
-      "<th class='num'>طلبات/يوم</th><th class='num'>إيراد</th><th class='num'>EBITDA</th>" +
-      "<th class='num'>تراكمي</th></tr></thead><tbody>" + rowsMonths + "</tbody></table></div>" +
+      "<h2>4. First 18 months</h2>" +
+      "<div class='tw'><table class='tbl'><thead><tr><th class='num'>Month</th><th class='num'>Patients/day</th>" +
+      "<th class='num'>Orders/day</th><th class='num'>Revenue</th><th class='num'>EBITDA</th>" +
+      "<th class='num'>Cumulative</th></tr></thead><tbody>" + rowsMonths + "</tbody></table></div>" +
 
-      "<h2>5. التحليل</h2>" +
-      "<h3>نقاط القوة</h3><p>" + esc(val("strengths", "—")) + "</p>" +
-      "<h3>نقاط الضعف والمخاطر</h3><p>" + esc(val("weaknesses", "—")) + "</p>" +
-      "<h3>التوصيات</h3><p>" + esc(val("recommendations", "—")) + "</p>" +
+      "<h2>5. Analysis</h2>" +
+      "<h3>Strengths</h3><p>" + esc(val("strengths", "—")) + "</p>" +
+      "<h3>Weaknesses and risks</h3><p>" + esc(val("weaknesses", "—")) + "</p>" +
+      "<h3>Recommendations</h3><p>" + esc(val("recommendations", "—")) + "</p>" +
 
-      '<p class="rpt-foot">أُنشئت هذه الصفحة من اللوحة بتاريخ ' +
-      new Date().toLocaleDateString("ar-EG") +
-      ". كل رقم فيها مأخوذ من المدخلات التي كتبتها أنت.</p>";
+      '<p class="rpt-foot">Generated from the dashboard on ' +
+      new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) +
+      ". Every figure comes from the inputs you entered.</p>";
   }
 
   /* ------------------------------------------------------- add / delete rows */
@@ -1261,14 +1261,14 @@
       var add = ev.target.closest("[data-add]");
       if (add) {
         var kind = add.getAttribute("data-add");
-        if (kind === "capex1") state.capex_p1.push({ item: "بند جديد", qty: 1, unit: 100, src: "est", note: "" });
-        if (kind === "capex2") state.capex_p2.push({ item: "بند جديد", qty: 1, unit: 500, src: "est", note: "" });
-        if (kind === "capex3") state.capex_p3.push({ item: "بند جديد", qty: 1, unit: 500, src: "est", note: "" });
-        if (kind === "opex") state.fixed_opex.push({ label: "بند جديد", usd: 50 });
+        if (kind === "capex1") state.capex_p1.push({ item: "New item", qty: 1, unit: 100, src: "est", note: "" });
+        if (kind === "capex2") state.capex_p2.push({ item: "New item", qty: 1, unit: 500, src: "est", note: "" });
+        if (kind === "capex3") state.capex_p3.push({ item: "New item", qty: 1, unit: 500, src: "est", note: "" });
+        if (kind === "opex") state.fixed_opex.push({ label: "New item", usd: 50 });
         if (kind === "menu") {
           var n = Object.keys(state.menu).length + 1;
           state.menu.push({
-            key: "custom_" + Date.now(), label: "فحص جديد " + n,
+            key: "custom_" + Date.now(), label: "New test " + n,
             price_usd: 2.5, vc: 0.8, tech_min: 5, share: 0.02, phase: 1, note: ""
           });
         }
@@ -1325,7 +1325,7 @@
           state = mergeDeep(defaultsState(), got);
           onChange();
           renderTab(currentTab());
-        } catch (e) { alert("ملف غير صالح"); }
+        } catch (e) { alert("Invalid file"); }
       };
       fr.readAsText(file);
       ev.target.value = "";
@@ -1333,7 +1333,7 @@
 
     var empty = $("#btn-empty");
     if (empty) empty.addEventListener("click", function () {
-      if (!confirm("البدء من صفحة بيضاء؟ ستُحذف كل البيانات الحالية.")) return;
+      if (!confirm("Start from a blank sheet? All current data will be deleted.")) return;
       state = blankState();
       localStorage.setItem(STORE, JSON.stringify(state));
       compute(true);
@@ -1349,7 +1349,7 @@
     });
 
     $("#btn-reset").addEventListener("click", function () {
-      if (!confirm("استعادة القيم الأصلية للدراسة؟ ستُفقد كل تعديلاتك.")) return;
+      if (!confirm("Restore the worked example? Your edits will be lost.")) return;
       state = defaultsState();
       localStorage.removeItem(STORE);
       onChange();

@@ -918,3 +918,67 @@ table.tbl tr:hover .c-del .btn,
   .pagehead h1 { font-size: 20px; }
   .pagehead p { font-size: 13px; }
 }
+
+/* ---------------------------------------------------- LTR / English pass */
+html[dir="ltr"] body { text-align: left; }
+html[dir="ltr"] .kpi, html[dir="ltr"] .kpi .v, html[dir="ltr"] .kpi .k { text-align: left; }
+html[dir="ltr"] .pagehead h1,
+html[dir="ltr"] .pagehead p { text-align: left; }
+html[dir="ltr"] .card > h2,
+html[dir="ltr"] .card > .sub { text-align: left; }
+html[dir="ltr"] .field label { text-align: left; }
+html[dir="ltr"] table.tbl th,
+html[dir="ltr"] table.tbl td { text-align: left; }
+html[dir="ltr"] table.tbl th.num,
+html[dir="ltr"] table.tbl td.num { text-align: right; }
+html[dir="ltr"] .rpt-head, html[dir="ltr"] .report h2, html[dir="ltr"] .report h3,
+html[dir="ltr"] .report p { text-align: left; }
+html[dir="ltr"] .tcard-h { flex-direction: row; }
+html[dir="ltr"] .legend { justify-content: flex-start; }
+html[dir="ltr"] .foot { text-align: center; }
+html[dir="ltr"] .topnav { margin-inline-start: auto; }
+
+/* slightly tighter Latin type for headings */
+html[dir="ltr"] { font-feature-settings: "kern" 1; }
+html[dir="ltr"] .kpi .v { letter-spacing: -.5px; }
+
+/* LTR mobile: nav must not clip the brand, and tabs start from the left */
+@media (max-width: 560px) {
+  html[dir="ltr"] .brand { display: inline-flex; }
+  html[dir="ltr"] .brand .logo { width: 26px; height: 26px; font-size: 13px; }
+  html[dir="ltr"] .topnav { gap: 0; justify-content: flex-end; }
+  html[dir="ltr"] .topnav a { padding: 6px 6px; font-size: 11px; }
+  html[dir="ltr"] .topnav a.on { padding-inline: 9px; }
+}
+html[dir="ltr"] .tabs { justify-content: flex-start; }
+html[dir="ltr"] .toolbar { justify-content: flex-start; }
+html[dir="ltr"] #save-state { margin-inline-start: auto; }
+@media (max-width: 640px) { html[dir="ltr"] #save-state { text-align: right; } }
+
+/* phone header: logo glyph + scrolling nav, no clipped pill */
+@media (max-width: 560px) {
+  html[dir="ltr"] .topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+  }
+  html[dir="ltr"] .brand { flex: none; }
+  html[dir="ltr"] .topnav {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+  html[dir="ltr"] .topnav a { flex: none; padding: 6px 8px; font-size: 11.5px; }
+}
+
+/* LTR: name inputs are left-aligned text, not right-aligned boxes */
+html[dir="ltr"] .nameinput,
+html[dir="ltr"] td.name .nameinput,
+html[dir="ltr"] .tcard-h .nameinput { text-align: left; }
+html[dir="ltr"] #capex1-table td input.wide,
+html[dir="ltr"] #opex-table td input.wide { text-align: left; }
+html[dir="ltr"] .tcard-h { justify-content: space-between; }
+html[dir="ltr"] .tcard-f { flex-direction: row; }

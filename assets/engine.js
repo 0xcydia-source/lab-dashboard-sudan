@@ -27,76 +27,76 @@
   /* key, label, price_usd, vc_usd, tech_min, share, phase, note
    * price_usd is what the patient pays, in USD. SDG is derived from it. */
   var MENU = [
-    ["cbc", "صورة دم كاملة CBC (3-part)", 4.42, 1.20, 5.0, 0.24, 1, "3 كواشف + QC يومي"],
-    ["chem", "كيمياء – فحص مفرد (يوريا/كرياتينين/حمض بوليك/سكر)", 3.13, 0.45, 4.0, 0.24, 1, "كواشف سائلة، معايرة أسبوعية"],
-    ["panel", "باقة كيمياء (10–12 محللاً)", 15.46, 2.60, 16.0, 0.07, 1, "أعلى سعر لكل دقيقة فني"],
-    ["hb", "هيموغلوبين Hb", 1.47, 0.12, 1.5, 0.04, 1, "Drabkin"],
-    ["esr", "سرعة الترسيب ESR", 2.94, 0.20, 5.0, 0.04, 1, "Westergren يدوي"],
-    ["malaria", "شريط/فيلم الملاريا", 2.94, 0.75, 8.0, 0.08, 1, "موسمي"],
-    ["urine", "بول عام U.G (شريط + مجهر)", 2.94, 0.45, 6.0, 0.06, 1, "شريط 10 بارامتر"],
-    ["stool", "براز عام", 2.94, 0.30, 7.0, 0.02, 1, ""],
-    ["serology", "سيرولوجي (Widal/ASO/RF/CRP/VDRL)", 2.76, 0.55, 6.0, 0.07, 1, "لاتكس/تترا"],
-    ["ict", "اختبار سريع ICT (تيفوئيد/H.pylori/فيروسات كبد/HCG/Dengue)", 4.05, 1.25, 3.0, 0.09, 1, "الكاسيت أغلى بند بالدولار"],
-    ["semen", "تحليل منوي", 5.52, 0.25, 12.0, 0.01, 1, ""],
-    ["hba1c", "HbA1c", 4.42, 1.60, 4.0, 0.04, 2, "كواشف مستوردة"],
-    ["electro", "كهارل Na/K/Cl (ISE)", 6.62, 1.35, 3.0, 0.05, 2, "خراطيش ISE"],
-    ["coag", "تخثر PT/INR", 5.52, 2.00, 4.0, 0.03, 2, ""],
-    ["hormone", "هرمونات CLIA (TSH/FT4/β-hCG)", 9.2, 4.50, 6.0, 0.02, 3, "أغلى كواشف"],
-    ["elisa", "ELISA (تأكيد/فيروسات كبد)", 8.1, 2.50, 16.0, 0.01, 2, "صفيحة 96 عيناً"]
+    ["cbc", "Complete Blood Count (CBC, 3-part)", 4.42, 1.2, 5.0, 0.24, 1, "3 reagents + daily QC"],
+    ["chem", "Chemistry - single test (urea/creatinine/uric acid/glucose)", 3.13, 0.45, 4.0, 0.24, 1, "Liquid reagents, weekly calibration"],
+    ["panel", "Chemistry panel (10-12 analytes)", 15.46, 2.6, 16.0, 0.07, 1, "Highest revenue per tech-minute"],
+    ["hb", "Hemoglobin (Hb)", 1.47, 0.12, 1.5, 0.04, 1, "Drabkin"],
+    ["esr", "ESR (erythrocyte sedimentation)", 2.94, 0.2, 5.0, 0.04, 1, "Westergren, manual"],
+    ["malaria", "Malaria smear / RDT", 2.94, 0.75, 8.0, 0.08, 1, "Seasonal"],
+    ["urine", "Urinalysis (dipstick + microscopy)", 2.94, 0.45, 6.0, 0.06, 1, "10-parameter strip"],
+    ["stool", "Stool analysis", 2.94, 0.3, 7.0, 0.02, 1, ""],
+    ["serology", "Serology (Widal/ASO/RF/CRP/VDRL)", 2.76, 0.55, 6.0, 0.07, 1, "Latex / titre"],
+    ["ict", "Rapid test ICT (typhoid/H.pylori/hepatitis/HCG/Dengue)", 4.05, 1.25, 3.0, 0.09, 1, "Cassette is the priciest USD item"],
+    ["semen", "Semen analysis", 5.52, 0.25, 12.0, 0.01, 1, ""],
+    ["hba1c", "HbA1c", 4.42, 1.6, 4.0, 0.04, 2, "Imported reagents"],
+    ["electro", "Electrolytes Na/K/Cl (ISE)", 6.62, 1.35, 3.0, 0.05, 2, "ISE cartridges"],
+    ["coag", "Coagulation PT/INR", 5.52, 2.0, 4.0, 0.03, 2, ""],
+    ["hormone", "Hormones CLIA (TSH/FT4/beta-hCG)", 9.2, 4.5, 6.0, 0.02, 3, "Most expensive reagents"],
+    ["elisa", "ELISA (confirmation / viral hepatitis)", 8.1, 2.5, 16.0, 0.01, 2, "96-well plate"]
   ];
 
   var CAPEX_P1 = [
-    ["جهاز CBC 3-part ماركة Mindray (BC-21s، جديد، ضمان 6 أشهر)", 1, 2900, "own"],
-    ["جهاز كيمياء نصف آلي (ELHODA 880 / HC-80+)", 1, 1250, "own"],
-    ["سنترفيوج 6 عين", 1, 65, "own"],
-    ["ميكروسكوب ثنائي العينية LED 107 + عدسة 100x", 1, 210, "own"],
-    ["حامل سرعة الترسيب ESR + مؤقت", 1, 70, "est"],
-    ["حمام مائي رقمي", 1, 120, "est"],
-    ["خلاط Vortex", 1, 35, "est"],
-    ["دوار Rotator لاختبارات اللاتكس", 1, 45, "est"],
-    ["ميزان تحليلي 0.001g", 1, 180, "est"],
-    ["ثلاجة كواشف 350 لتر بباب زجاجي", 1, 600, "est"],
-    ["مقطر ماء 4 لتر/ساعة", 1, 220, "est"],
-    ["3 ماصات دقيقة + حامل + رؤوس", 1, 240, "est"],
-    ["UPS أونلاين 2kVA", 1, 250, "est"],
-    ["منظم جهد AVR 5kVA", 1, 120, "est"],
-    ["مولد 6–7 kVA", 1, 900, "est"],
-    ["كمبيوتر + طابعة ليزر + LIS", 1, 700, "est"],
-    ["تكييف سبليت 1.5 حصان × 2", 1, 1000, "est"],
-    ["أثاث وتجهيز 60–80 م²", 1, 1200, "est"],
-    ["لافتة + تراخيص + رسوم + استشارة قانونية", 1, 600, "est"],
-    ["سلامة وأمن حيوي", 1, 350, "est"]
+    ["Mindray BC-21s CBC analyzer (new, 6-month warranty)", 1, 2900, "own"],
+    ["Semi-auto chemistry analyzer (ELHODA 880 / HC-80+)", 1, 1250, "own"],
+    ["Centrifuge, 6-place", 1, 65, "own"],
+    ["Binocular LED microscope + 100x oil objective", 1, 210, "own"],
+    ["ESR stand + timer", 1, 70, "est"],
+    ["Digital water bath", 1, 120, "est"],
+    ["Vortex mixer", 1, 35, "est"],
+    ["Rotator for latex tests", 1, 45, "est"],
+    ["Analytical balance 0.001 g", 1, 180, "est"],
+    ["Reagent fridge 350 L, glass door", 1, 600, "est"],
+    ["Water still 4 L/h", 1, 220, "est"],
+    ["Micropipettes x3 + stand + tips", 1, 240, "est"],
+    ["Online UPS 2 kVA", 1, 250, "est"],
+    ["Voltage regulator AVR 5 kVA", 1, 120, "est"],
+    ["Generator 6-7 kVA", 1, 900, "est"],
+    ["PC + laser printer + LIS", 1, 700, "est"],
+    ["Split AC 1.5 HP x2", 1, 1000, "est"],
+    ["Furniture and fit-out, 60-80 m2", 1, 1200, "est"],
+    ["Signage + licensing + legal fees", 1, 600, "est"],
+    ["Biosafety and PPE kit", 1, 350, "est"]
   ];
 
   var CAPEX_P2 = [
-    ["جهاز كهارل Na/K/Cl (ISE)", 1600],
-    ["جهاز HbA1c", 1300],
-    ["جهاز تخثر قناتين (PT/INR/APTT)", 1900],
-    ["ELISA Reader + Washer", 2400],
-    ["مخزون كواشف للقسم الثاني", 900]
+    ["Electrolyte analyzer Na/K/Cl (ISE)", 1600],
+    ["HbA1c analyzer", 1300],
+    ["Coagulation analyzer, 2-channel (PT/INR/APTT)", 1900],
+    ["ELISA reader + washer", 2400],
+    ["Reagent stock for section 2", 900]
   ];
 
   var CAPEX_P3 = [
-    ["جهاز هرمونات CLIA نصف آلي", 3600],
-    ["حاضنة + أوتوكلاف", 1600]
+    ["Semi-auto CLIA hormone analyzer", 3600],
+    ["Incubator + autoclave", 1600]
   ];
 
   var FIXED_OPEX = [
-    ["إيجار 60–80 م² في أركوت", 500],
-    ["أجر المالك/المدير (إدارة + مراجعة QC)", 350],
-    ["موظف استقبال", 100],
-    ["عامل نظافة (جزئي)", 55],
-    ["كهرباء الشبكة", 90],
-    ["وقود المولد", 140],
-    ["مياه", 30],
-    ["إنترنت وهاتف", 40],
-    ["صيانة وقطع غيار", 130],
-    ["تسويق (لوحات، مندوب عيادات، سوشيال)", 150],
-    ["مستهلكات غير كواشف (قفازات/أنابيب/إبر/شرائح)", 190],
-    ["مواد ضبط الجودة QC ومعايرة", 90],
-    ["تخلص من النفايات الطبية", 45],
-    ["برنامج LIS + نسخ احتياطي", 35],
-    ["مصاريف إدارية متفرقة", 70]
+    ["Rent, 60-80 m2 in Arkawit", 500],
+    ["Owner/manager salary (admin + QC review)", 350],
+    ["Receptionist", 100],
+    ["Cleaner (part-time)", 55],
+    ["Grid electricity", 90],
+    ["Generator fuel", 140],
+    ["Water", 30],
+    ["Internet and phone", 40],
+    ["Service and spare parts", 130],
+    ["Marketing (signage, clinic rep, social)", 150],
+    ["Non-reagent consumables (gloves/tubes/needles/slides)", 190],
+    ["QC and calibration materials", 90],
+    ["Medical waste disposal", 45],
+    ["LIS software + backup", 35],
+    ["Admin and misc", 70]
   ];
 
   var STOCK_OPENING = 2300;
@@ -109,27 +109,27 @@
   /* Lean preset: a small lab that really opens for about 5,000 USD turnkey.
    * Same engine, shorter BOM, lower logistics percentages. */
   var LEAN_BOM = [
-    ["CBC 3-part (PH-70 أو DH33)", 1, 1180, "est"],
-    ["جهاز كيمياء نصف آلي (HC-80+ / 888)", 1, 780, "est"],
-    ["سنترفيوج 6 عين", 1, 50, "est"],
-    ["ميكروسكوب ثنائي العينية LED", 1, 150, "est"],
-    ["حامل ESR + مؤقت", 1, 50, "est"],
-    ["خلاط Vortex", 1, 28, "est"],
-    ["3 ماصات + حوامل + رؤوس", 1, 160, "est"],
-    ["ثلاجة كواشف 200 لتر", 1, 185, "est"],
-    ["UPS 1kVA", 1, 100, "est"],
-    ["منظم جهد AVR 5kVA", 1, 55, "est"],
-    ["مولد 3kVA", 1, 260, "est"],
-    ["كمبيوتر + طابعة + LIS بسيط", 1, 310, "est"],
-    ["أثاث وتجهيز أساسي (40–60 م²)", 1, 330, "est"],
-    ["تراخيص ولافتة", 1, 350, "est"],
-    ["سلامة وأمن حيوي", 1, 100, "est"]
+    ["CBC 3-part (PH-70 or DH33)", 1, 1180, "est"],
+    ["Semi-auto chemistry (HC-80+ / 888)", 1, 780, "est"],
+    ["Centrifuge, 6-place", 1, 50, "est"],
+    ["Binocular LED microscope", 1, 150, "est"],
+    ["ESR stand + timer", 1, 50, "est"],
+    ["Vortex mixer", 1, 28, "est"],
+    ["Micropipettes x3 + stand", 1, 160, "est"],
+    ["Reagent fridge 200 L", 1, 185, "est"],
+    ["UPS 1 kVA", 1, 100, "est"],
+    ["Voltage regulator AVR 5 kVA", 1, 55, "est"],
+    ["Generator 3 kVA", 1, 260, "est"],
+    ["PC + printer + basic LIS", 1, 310, "est"],
+    ["Basic furniture and fit-out (40-60 m2)", 1, 330, "est"],
+    ["Licensing and signage", 1, 350, "est"],
+    ["Biosafety kit", 1, 100, "est"]
   ];
   var LEAN_PCT = { freight: 0.05, install: 0.02, stock: 400, contingency: 0.04 };
 
   var PRESETS = {
-    full: { label: "خطة كاملة", note: "CBC Mindray + ثلاجة 350 لتر + مولد 6–7kVA + مخزون أكبر" },
-    lean: { label: "معمل صغير (~5,000$)", note: "حد أدنى قابل للتشغيل: جهازان + أساسيات + رخصة" }
+    full: { label: "Full build", note: "Mindray CBC + 350 L reagent fridge + 6-7 kVA generator + larger stock" },
+    lean: { label: "Small lab (~$5,000)", note: "Minimum workable setup: two analyzers + essentials + licence" }
   };
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -446,9 +446,9 @@
     var opt = run(st, { vol: 1.25, A: { fx_drift: 0.12, tests_per_patient: 1.75,
       price_index: 0.95, capex_mult: 0.95 } });
     return [
-      { key: "cons", name: "متحفظ", res: cons, m: metrics(cons) },
-      { key: "base", name: "أساسي", res: base, m: metrics(base) },
-      { key: "opt", name: "طموح", res: opt, m: metrics(opt) }
+      { key: "cons", name: "Conservative", res: cons, m: metrics(cons) },
+      { key: "base", name: "Base case", res: base, m: metrics(base) },
+      { key: "opt", name: "Optimistic", res: opt, m: metrics(opt) }
     ];
   }
 
