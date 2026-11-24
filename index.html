@@ -29,6 +29,14 @@
        (لا يُرسل شيء إلى أي خادم). الأرقام الملوّنة بالكهرماني هي التي عدّلتها.</p>
   </div>
 
+  <div class="presetbar">
+    <div class="segment" role="group" aria-label="حجم المعمل">
+      <button data-preset="lean" aria-pressed="false">معمل صغير <b>~5,000$</b></button>
+      <button data-preset="full" aria-pressed="true">الخطة الكاملة <b>~16,000$</b></button>
+    </div>
+    <p class="preset-note" id="preset-note"></p>
+  </div>
+
   <!-- ------------------------------------------------------------- KPIs -->
   <section class="kpis" id="kpis" aria-label="المؤشرات الرئيسية"></section>
 
@@ -92,6 +100,21 @@
       </div>
     </div>
 
+    <div class="grid c2">
+      <div class="card">
+        <h2>أين يذهب رأس المال؟</h2>
+        <p class="sub">توزيع الاستثمار على مجموعات البنود</p>
+        <div id="ch-capexplit"></div>
+      </div>
+
+      <div class="card">
+        <h2>ربحية الفحوص لكل دقيقة فني</h2>
+        <p class="sub">الفني هو العنق — الفرز بحسب المساهمة في الدقيقة</p>
+        <div id="ch-perminute"></div>
+        <p class="chart-note">المساهمة = السعر بالدولار ناقص الكواشف · الدقائق تشمل التسجيل والتقرير.</p>
+      </div>
+    </div>
+
     <div class="card">
       <h2>الحساسية — أي متغير يغيّر النتيجة أكثر؟</h2>
       <p class="sub">تغيير عامل واحد في كل مرة حول صافي القيمة الحالية (36 شهراً، 22%)</p>
@@ -107,15 +130,18 @@
       أو غيّر <strong>حصة الطلب</strong> (كم % من الطلبات يكون هذا الفحص). النتائج تتحدث فوراً.
     </div>
     <div class="card">
-      <h2>قائمة الفحوص <span class="pill" id="menu-count"></span></h2>
-      <p class="sub">التكلفة بالدولار لكل طلب · الحصة مجموعها يجب أن يقارب 100%</p>
+      <div class="cardhead">
+        <h2>قائمة الفحوص <span class="pill" id="menu-count"></span></h2>
+        <button class="btn sm primary" data-add="menu">+ فحص جديد</button>
+      </div>
+      <p class="sub">السعر بالجنيه السوداني (SDG) · التكلفة بالدولار لكل طلب · الحصة مجموعها يجب أن يقارب 100%</p>
       <div id="menu-cards" class="menu-cards"></div>
       <div class="tw only-wide">
         <table class="tbl" id="menu-table">
           <thead>
             <tr>
               <th>الفحص</th>
-              <th class="num">السعر (ج.م)</th>
+              <th class="num">السعر (جنيه سوداني)</th>
               <th class="num">التكلفة ($)</th>
               <th class="num">حصة الطلب</th>
               <th class="num">مساهمة ($/طلب)</th>
@@ -154,7 +180,7 @@
         </table>
       </div>
       <div class="toolbar" style="margin:10px 0 0">
-        <button class="btn sm" data-add="capex1">+ إضافة بند</button>
+        <button class="btn sm primary" data-add="capex1">+ إضافة بند</button>
       </div>
     </div>
 
@@ -229,14 +255,14 @@
       <p class="sub">هذان الرقمان يغيّران كل شيء — حدّثهما أولاً</p>
       <div class="fields">
         <div class="field">
-          <label for="fx-sdg">سعر الصرف (جنيه سوداني / دولار)</label>
-          <input type="number" id="fx-sdg" data-bind="A.fx_sdg" min="1" step="10">
-          <span class="hint">سعر السوق الموازي يوم الشراء</span>
+          <label for="fx-sdg">سعر الدولار بالجنيه السوداني (SDG)</label>
+          <input type="number" id="fx-sdg" data-bind="A.fx_sdg" min="1" step="100">
+          <span class="hint">1 دولار = <b>12,000</b> جنيه سوداني — عدّله بسعر السوق يوم الشراء</span>
         </div>
         <div class="field">
-          <label for="fx-egp">سعر الصرف (جنيه مصري / دولار)</label>
+          <label for="fx-egp">سعر الدولار بالجنيه المصري (EGP) — عملة مختلفة</label>
           <input type="number" id="fx-egp" data-bind="A.fx_egp" min="1" step="1">
-          <span class="hint">لتحويل أسعار الموردين المصريين</span>
+          <span class="hint">عملة مختلفة تماماً — لتحويل أسعار الموردين المصريين فقط</span>
         </div>
         <div class="field">
           <label for="price-index">سعرنا نسبةً لقائمة المنافس</label>

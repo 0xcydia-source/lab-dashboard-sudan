@@ -16,7 +16,7 @@
     return Number(x).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
   }
   function usd(x, d) { return nf(x, d) + "$"; }
-  function sdg(x) { return nf(x) + " ج.م"; }
+  function sdg(x) { return nf(x) + " ج.س"; }   // SDG, not EGP
   function pct(x, d) { return nf(x, d == null ? 0 : d) + "%"; }
   function esc(s) {
     return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
@@ -28,31 +28,42 @@
   var state = load();
   var results = null;
 
-  function defaultsState() {
+  function defaultsState(preset) {
+    preset = preset || (typeof PRESET !== "undefined" ? PRESET.id : "full");
     var s = M.makeState();
+    var lean = preset === "lean";
+    var A2 = Object.assign({}, s.A);
+    if (lean) { A2.phase2_month = 999; A2.phase3_month = 999; }
     return {
-      A: Object.assign({}, s.A),
+      preset: preset,
+      A: A2,
       menu: s.menu.map(function (m) { return Object.assign({}, m); }),
-      capex_p1: s.capex_p1.map(function (c) { return Object.assign({}, c); }),
-      capex_p2: s.capex_p2.map(function (c) { return Object.assign({}, c); }),
-      capex_p3: s.capex_p3.map(function (c) { return Object.assign({}, c); }),
+      capex_p1: (lean
+        ? M.LEAN_BOM.map(function (c) {
+            return { item: c[0], qty: c[1], unit: c[2], src: c[3], note: "" };
+          })
+        : s.capex_p1.map(function (c) { return Object.assign({}, c); })),
+      // the lean lab is the whole project: no phase 2/3 until you add them back
+      capex_p2: lean ? [] : s.capex_p2.map(function (c) { return Object.assign({}, c); }),
+      capex_p3: lean ? [] : s.capex_p3.map(function (c) { return Object.assign({}, c); }),
       fixed_opex: s.fixed_opex.map(function (c) { return Object.assign({}, c); }),
       lab: Object.assign({}, s.lab),
       ramp: s.ramp.slice(),
-      stock_opening: s.stock_opening,
-      contingency: s.contingency,
-      freight: s.freight,
-      install: s.install
+      stock_opening: lean ? M.LEAN_PCT.stock : s.stock_opening,
+      contingency: lean ? M.LEAN_PCT.contingency : s.contingency,
+      freight: lean ? M.LEAN_PCT.freight : s.freight,
+      install: lean ? M.LEAN_PCT.install : s.install
     };
   }
   var DEFAULTS = defaultsState();
+  var PRESET = { id: "full" };
 
   function load() {
     try {
       var raw = localStorage.getItem(STORE);
       if (!raw) return defaultsState();
       var got = JSON.parse(raw);
-      var base = defaultsState();
+      var base = defaultsState(got.preset || "full");
       return mergeDeep(base, got);
     } catch (e) { return defaultsState(); }
   }
@@ -193,7 +204,7 @@
       return "<tr>" +
         '<td class="name">' + esc(item.label) +
           (item.phase > 1 ? ' <span class="pill">م' + item.phase + "</span>" : "") + "</td>" +
-        '<td class="num"><input type="number" step="500" min="0" ' +
+        '<td class="num"><input type="number" step="1000" min="0" ' +
           'data-menu="' + i + '" data-field="price_sdg" value="' + item.price_sdg + '"></td>' +
         '<td class="num"><input type="number" step="0.05" min="0" ' +
           'data-menu="' + i + '" data-field="vc" value="' + item.vc + '"></td>' +
@@ -204,6 +215,8 @@
         '<td class="num"><input type="number" step="0.5" min="0.5" ' +
           'data-menu="' + i + '" data-field="tech_min" value="' + item.tech_min + '"></td>' +
         '<td class="num" data-derived="n:' + i + '">' + nf(per.n, 0) + "</td>" +
+        '<td class="num"><button class="btn sm ghost" data-del="menu" data-i="' + i +
+          '" title="حذف الفحص">✕</button></td>' +
         "</tr>";
     }).join("");
 
@@ -218,9 +231,12 @@
         return '<div class="tcard">' +
           '<div class="tcard-h"><span>' + esc(item.label) +
             (item.phase > 1 ? ' <span class="pill">م' + item.phase + "</span>" : "") +
-          '</span><span class="pill ' + cls + '" data-derived="mgc:' + i + '">' + nf(margin) + "%</span></div>" +
+          '</span><span style="display:flex;gap:6px;align-items:center;flex:none">' +
+            '<span class="pill ' + cls + '" data-derived="mgc:' + i + '">' + nf(margin) + "%</span>" +
+            '<button class="btn sm ghost" data-del="menu" data-i="' + i + '" title="حذف">✕</button>' +
+          "</span></div>" +
           '<div class="tcard-g">' +
-            '<div class="field"><label>السعر (ج.م)</label><input type="number" step="500" min="0" ' +
+            '<div class="field"><label>السعر (جنيه سوداني)</label><input type="number" step="1000" min="0" ' +
               'data-menu="' + i + '" data-field="price_sdg" value="' + item.price_sdg + '"></div>' +
             '<div class="field"><label>تكلفة الكواشف ($)</label><input type="number" step="0.05" min="0" ' +
               'data-menu="' + i + '" data-field="vc" value="' + item.vc + '"></div>' +
@@ -248,7 +264,7 @@
       "<td class='num' id='mt-cm'>" + nf(cmSum / (r12.orders || 1), 2) + "</td>" +
       "<td class='num' id='mt-mg'>" + nf(results.m.cm_pct) + "%</td>" +
       "<td class='num' id='mt-min'>" + nf(results.minutes, 1) + "</td>" +
-      "<td class='num' id='mt-n'>" + nf(r12.orders) + "</td></tr>";
+      "<td class='num' id='mt-n'>" + nf(r12.orders) + "</td><td></td></tr>";
 
     var warn = Math.abs(shareSum - 1) > 0.02
       ? '<div class="note" style="margin:10px 0 0">مجموع الحصص ' + nf(shareSum * 100) +
@@ -803,9 +819,87 @@
     }).join("");
   }
 
+  /* capital split: where the phase-1 money actually goes */
+  function drawCapexSplit() {
+    var host = $("#ch-capexplit");
+    if (!host) return;
+    var cx = results.base.capex;
+    var ANALYZERS = /CBC|كيمياء|سنترفيوج|ميكروسكوب|ESR|Vortex|Rotator|ماصات|ميزان|حامل/i;
+    var BASICS = /ثلاجة|مولد|UPS|AVR|تكييف|مقطر|حمام|كمبيوتر|LIS/i;
+    var hw = results.st.capex_p1.map(function (c) { return { item: c.item, total: c.qty * c.unit }; });
+    var sum = function (re) {
+      return hw.filter(function (x) { return re.test(x.item); })
+               .reduce(function (a, x) { return a + x.total; }, 0);
+    };
+    var analyzers = sum(ANALYZERS), basics = sum(BASICS);
+    var rest = Math.max(0, cx.hardware - analyzers - basics);
+    var groups = [
+      ["أجهزة التحليل والماصات", analyzers, "#12507a"],
+      ["تجهيز وأثاث وتراخيص", rest, "#3f7fa6"],
+      ["أساسيات (ثلاجة/مولد/UPS/تكييف)", basics, "#7ba7c4"],
+      ["شحن وتخليص", cx.freight, "#c8860d"],
+      ["تركيب وتدريب", cx.install, "#d9a54a"],
+      ["مخزون افتتاحي", cx.stock, "#1d7a4d"],
+      ["احتياطي طوارئ", cx.contingency, "#9aa6b2"]
+    ].filter(function (g) { return g[1] > 1; });
+    var total = groups.reduce(function (a, g) { return a + g[1]; }, 0);
+    var bar = groups.map(function (g) {
+      return '<span title="' + esc(g[0]) + " — " + usd(g[1]) + '" style="display:block;height:14px;width:' +
+        (g[1] / total * 100).toFixed(2) + "%;background:" + g[2] + '"></span>';
+    }).join("");
+    var rows = groups.map(function (g) {
+      return '<div style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px">' +
+        '<span style="width:10px;height:10px;border-radius:3px;background:' + g[2] + ';flex:none"></span>' +
+        '<span style="flex:1">' + esc(g[0]) + "</span>" +
+        '<span style="font-variant-numeric:tabular-nums;color:#4a5866">' + usd(g[1]) + "</span>" +
+        '<span style="width:42px;text-align:left;color:#7b8794;font-size:12px">' +
+          nf(g[1] / total * 100) + "%</span></div>";
+    }).join("");
+    host.innerHTML = '<div style="display:flex;border-radius:7px;overflow:hidden;margin:2px 0 12px">' +
+      bar + "</div>" + rows +
+      '<p class="chart-note" style="margin-top:8px">إجمالي الاستثمار ' + usd(total) +
+      " · العتاد " + usd(cx.hardware) + "</p>";
+  }
+
+  /* contribution per technologist-minute — the real ranking of the menu */
+  function drawPerMinute() {
+    var host = $("#ch-perminute");
+    if (!host) return;
+    var r12 = results.base.months[11];
+    var fx = r12.fx, p = results.st.A;
+    var rows = Object.keys(r12.per).map(function (k) {
+      var mw = null;
+      results.st.menu.forEach(function (x) { if (x.key === k) mw = x; });
+      if (!mw) return null;
+      var usdPrice = mw.price_sdg * p.price_index / fx;
+      var vc = mw.vc * p.vc_mult * (1 + p.import_premium);
+      var mins = mw.tech_min + p.overhead_min_per_order;
+      return { label: mw.label, perMin: (usdPrice - vc) / mins, mins: mins,
+               contrib: usdPrice - vc, n: r12.per[k].n };
+    }).filter(Boolean);
+    rows.sort(function (a, b) { return b.perMin - a.perMin; });
+    var top = rows.slice(0, 8);
+    var max = top[0].perMin || 1;
+    host.innerHTML = top.map(function (r) {
+      return '<div style="margin:0 0 9px">' +
+        '<div style="display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:2px">' +
+          '<span style="font-weight:600">' + esc(r.label) + "</span>" +
+          '<span style="color:#7b8794;direction:ltr;unicode-bidi:isolate">$' +
+            r.perMin.toFixed(2) + " / دقيقة</span></div>" +
+        '<div style="height:12px;background:#f2f5f8;border-radius:4px;overflow:hidden">' +
+          '<span style="display:block;height:100%;width:' + (r.perMin / max * 100).toFixed(1) +
+          '%;background:#12507a"></span></div>' +
+        "</div>";
+    }).join("") +
+      '<p class="chart-note">' + nf(rows.length) + " فحصاً نشطاً · أعلى قيمة لكل دقيقة فني: " +
+      esc(top[0].label) + "</p>";
+  }
+
   function drawAll() {
     try {
       drawCashflow();
+      drawCapexSplit();
+      drawPerMinute();
       drawBreakeven();
       drawMonthly();
       drawCostMix();
@@ -951,6 +1045,14 @@
         if (f !== "item" && isNaN(v)) return;
         state["capex_p" + ph][i][f] = v;
         if (f !== "item") inp.className = "changed";
+        // keep the money total on a card in sync while typing (no re-render)
+        if (f !== "item") {
+          var card = inp.closest(".tcard");
+          if (card) {
+            var tot = card.querySelector(".tcard-f span");
+            if (tot) tot.textContent = "الإجمالي " + usd(state["capex_p" + ph][i].qty * state["capex_p" + ph][i].unit);
+          }
+        }
         onChange();
         return;
       }
@@ -975,6 +1077,49 @@
     }, true);
   }
 
+  /* --------------------------------------------------------------- presets */
+  function syncPresetBar() {
+    var id = state.preset || "full";
+    $$("[data-preset]").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-preset") === id ? "true" : "false");
+    });
+    var note = $("#preset-note");
+    if (note && M.PRESETS[id]) {
+      note.textContent = id === "lean"
+        ? "معمل صغير: جهازا CBC وكيمياء + أساسيات + رخصة. مناسب لبداية بـ 5,000$ نقداً. " +
+          "الأجهزة هنا فئة دخول — تحقق من الكواشف والضمان قبل الشراء."
+        : "الخطة الكاملة: CBC Mindray بضمان + ثلاجة كواشف 350 لتر + مولد 6–7kVA + مخزون أكبر + احتياطي 8%.";
+    }
+  }
+
+  function applyPreset(id) {
+    if (!confirm(id === "lean"
+      ? "التحويل إلى «معمل صغير ~5,000$»؟ سيُستبدل جدول الأجهزة بالكامل ونسب الشحن/المخزون. تعديلاتك الحالية على الأجهزة ستُفقد."
+      : "العودة إلى «الخطة الكاملة»؟ سيُستبدل جدول الأجهزة بالكامل. تعديلاتك الحالية على الأجهزة ستُفقد.")) return;
+    var keep = { A: state.A, menu: state.menu, fixed_opex: state.fixed_opex,
+                 lab: state.lab, ramp: state.ramp };
+    state = defaultsState(id);
+    state = mergeDeep(state, keep);
+    state.preset = id;
+    localStorage.setItem(STORE, JSON.stringify(state));
+    compute(true);
+    renderKpis();
+    renderTab(currentTab());
+    syncPresetBar();
+    save();
+  }
+
+  function wirePresets() {
+    document.addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-preset]");
+      if (!b) return;
+      var id = b.getAttribute("data-preset");
+      if (id === (state.preset || "full")) return;
+      applyPreset(id);
+    });
+    syncPresetBar();
+  }
+
   /* ------------------------------------------------------- add / delete rows */
   function wireRowActions() {
     document.addEventListener("click", function (ev) {
@@ -985,6 +1130,13 @@
         if (kind === "capex2") state.capex_p2.push({ item: "بند جديد", qty: 1, unit: 500, src: "est", note: "" });
         if (kind === "capex3") state.capex_p3.push({ item: "بند جديد", qty: 1, unit: 500, src: "est", note: "" });
         if (kind === "opex") state.fixed_opex.push({ label: "بند جديد", usd: 50 });
+        if (kind === "menu") {
+          var n = Object.keys(state.menu).length + 1;
+          state.menu.push({
+            key: "custom_" + Date.now(), label: "فحص جديد " + n,
+            price_sdg: 20000, vc: 0.8, tech_min: 5, share: 0.02, phase: 1, note: ""
+          });
+        }
         onChange();
         renderTab(currentTab());
         return;
@@ -995,6 +1147,7 @@
         var i = +del.getAttribute("data-i");
         if (key === "fixed_opex" && state.fixed_opex.length <= 1) return;
         if (key === "capex_p1" && state.capex_p1.length <= 1) return;
+        if (key === "menu" && state.menu.length <= 1) return;
         state[key].splice(i, 1);
         onChange({ full: true });
         renderTab(currentTab());
@@ -1039,8 +1192,9 @@
 
     $("#btn-reset").addEventListener("click", function () {
       if (!confirm("استعادة القيم الأصلية للدراسة؟ ستُفقد كل تعديلاتك.")) return;
-      state = defaultsState();
+      state = defaultsState(state.preset || "full");
       localStorage.removeItem(STORE);
+      syncPresetBar();
       onChange();
       renderTab(currentTab());
     });
@@ -1070,6 +1224,7 @@
     wireAssumptions();
     wireRowActions();
     wireCardInputs();
+    wirePresets();
     renderTab("overview");
     syncAssumptionInputs();
   }

@@ -12,7 +12,7 @@
   var SEASONAL = ["malaria", "ict", "stool", "serology", "cbc", "urine"];
 
   var A = {
-    fx_sdg: 2500, fx_egp: 54, fx_drift: 0.18, pass_through: 0.9, pass_lag_months: 1,
+    fx_sdg: 12000, fx_egp: 54, fx_drift: 0.18, pass_through: 0.9, pass_lag_months: 1,
     days: 26, price_index: 0.92, tests_per_patient: 1.55, vc_mult: 1, opex_mult: 1,
     capex_mult: 1, discount: 0.22, tax: 0.17, dep_years_eq: 5, dep_years_it: 3,
     dep_years_fit: 5, phase2_month: 6, phase3_month: 16, terminal_ebitda_x: 12,
@@ -26,22 +26,22 @@
 
   /* key, label, price_sdg, vc_usd, tech_min, share, phase, note */
   var MENU = [
-    ["cbc", "صورة دم كاملة CBC (3-part)", 12000, 1.20, 5.0, 0.24, 1, "3 كواشف + QC يومي"],
-    ["chem", "كيمياء – فحص مفرد (يوريا/كرياتينين/حمض بوليك/سكر)", 8500, 0.45, 4.0, 0.24, 1, "كواشف سائلة، معايرة أسبوعية"],
-    ["panel", "باقة كيمياء (10–12 محللاً)", 42000, 2.60, 16.0, 0.07, 1, "أعلى سعر لكل دقيقة فني"],
-    ["hb", "هيموغلوبين Hb", 4000, 0.12, 1.5, 0.04, 1, "Drabkin"],
-    ["esr", "سرعة الترسيب ESR", 8000, 0.20, 5.0, 0.04, 1, "Westergren يدوي"],
-    ["malaria", "شريط/فيلم الملاريا", 8000, 0.75, 8.0, 0.08, 1, "موسمي"],
-    ["urine", "بول عام U.G (شريط + مجهر)", 8000, 0.45, 6.0, 0.06, 1, "شريط 10 بارامتر"],
-    ["stool", "براز عام", 8000, 0.30, 7.0, 0.02, 1, ""],
-    ["serology", "سيرولوجي (Widal/ASO/RF/CRP/VDRL)", 7500, 0.55, 6.0, 0.07, 1, "لاتكس/تترا"],
-    ["ict", "اختبار سريع ICT (تيفوئيد/H.pylori/فيروسات كبد/HCG/Dengue)", 11000, 1.25, 3.0, 0.09, 1, "الكاسيت أغلى بند بالدولار"],
-    ["semen", "تحليل منوي", 15000, 0.25, 12.0, 0.01, 1, ""],
-    ["hba1c", "HbA1c", 12000, 1.60, 4.0, 0.04, 2, "كواشف مستوردة"],
-    ["electro", "كهارل Na/K/Cl (ISE)", 18000, 1.35, 3.0, 0.05, 2, "خراطيش ISE"],
-    ["coag", "تخثر PT/INR", 15000, 2.00, 4.0, 0.03, 2, ""],
-    ["hormone", "هرمونات CLIA (TSH/FT4/β-hCG)", 25000, 4.50, 6.0, 0.02, 3, "أغلى كواشف"],
-    ["elisa", "ELISA (تأكيد/فيروسات كبد)", 22000, 2.50, 16.0, 0.01, 2, "صفيحة 96 عيناً"]
+    ["cbc", "صورة دم كاملة CBC (3-part)", 57600, 1.20, 5.0, 0.24, 1, "3 كواشف + QC يومي"],
+    ["chem", "كيمياء – فحص مفرد (يوريا/كرياتينين/حمض بوليك/سكر)", 40800, 0.45, 4.0, 0.24, 1, "كواشف سائلة، معايرة أسبوعية"],
+    ["panel", "باقة كيمياء (10–12 محللاً)", 201600, 2.60, 16.0, 0.07, 1, "أعلى سعر لكل دقيقة فني"],
+    ["hb", "هيموغلوبين Hb", 19200, 0.12, 1.5, 0.04, 1, "Drabkin"],
+    ["esr", "سرعة الترسيب ESR", 38400, 0.20, 5.0, 0.04, 1, "Westergren يدوي"],
+    ["malaria", "شريط/فيلم الملاريا", 38400, 0.75, 8.0, 0.08, 1, "موسمي"],
+    ["urine", "بول عام U.G (شريط + مجهر)", 38400, 0.45, 6.0, 0.06, 1, "شريط 10 بارامتر"],
+    ["stool", "براز عام", 38400, 0.30, 7.0, 0.02, 1, ""],
+    ["serology", "سيرولوجي (Widal/ASO/RF/CRP/VDRL)", 36000, 0.55, 6.0, 0.07, 1, "لاتكس/تترا"],
+    ["ict", "اختبار سريع ICT (تيفوئيد/H.pylori/فيروسات كبد/HCG/Dengue)", 52800, 1.25, 3.0, 0.09, 1, "الكاسيت أغلى بند بالدولار"],
+    ["semen", "تحليل منوي", 72000, 0.25, 12.0, 0.01, 1, ""],
+    ["hba1c", "HbA1c", 57600, 1.60, 4.0, 0.04, 2, "كواشف مستوردة"],
+    ["electro", "كهارل Na/K/Cl (ISE)", 86400, 1.35, 3.0, 0.05, 2, "خراطيش ISE"],
+    ["coag", "تخثر PT/INR", 72000, 2.00, 4.0, 0.03, 2, ""],
+    ["hormone", "هرمونات CLIA (TSH/FT4/β-hCG)", 120000, 4.50, 6.0, 0.02, 3, "أغلى كواشف"],
+    ["elisa", "ELISA (تأكيد/فيروسات كبد)", 105600, 2.50, 16.0, 0.01, 2, "صفيحة 96 عيناً"]
   ];
 
   var CAPEX_P1 = [
@@ -104,6 +104,33 @@
   var INSTALL = 0.03;
   var PHLEB_PATIENTS_PER = 55;
 
+
+  /* Lean preset: a small lab that really opens for about 5,000 USD turnkey.
+   * Same engine, shorter BOM, lower logistics percentages. */
+  var LEAN_BOM = [
+    ["CBC 3-part (PH-70 أو DH33)", 1, 1180, "est"],
+    ["جهاز كيمياء نصف آلي (HC-80+ / 888)", 1, 780, "est"],
+    ["سنترفيوج 6 عين", 1, 50, "est"],
+    ["ميكروسكوب ثنائي العينية LED", 1, 150, "est"],
+    ["حامل ESR + مؤقت", 1, 50, "est"],
+    ["خلاط Vortex", 1, 28, "est"],
+    ["3 ماصات + حوامل + رؤوس", 1, 160, "est"],
+    ["ثلاجة كواشف 200 لتر", 1, 185, "est"],
+    ["UPS 1kVA", 1, 100, "est"],
+    ["منظم جهد AVR 5kVA", 1, 55, "est"],
+    ["مولد 3kVA", 1, 260, "est"],
+    ["كمبيوتر + طابعة + LIS بسيط", 1, 310, "est"],
+    ["أثاث وتجهيز أساسي (40–60 م²)", 1, 330, "est"],
+    ["تراخيص ولافتة", 1, 350, "est"],
+    ["سلامة وأمن حيوي", 1, 100, "est"]
+  ];
+  var LEAN_PCT = { freight: 0.05, install: 0.02, stock: 400, contingency: 0.04 };
+
+  var PRESETS = {
+    full: { label: "خطة كاملة", note: "CBC Mindray + ثلاجة 350 لتر + مولد 6–7kVA + مخزون أكبر" },
+    lean: { label: "معمل صغير (~5,000$)", note: "حد أدنى قابل للتشغيل: جهازان + أساسيات + رخصة" }
+  };
+
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
   /* ------------------------------------------------------------ state build */
@@ -130,6 +157,7 @@
         if (Array.isArray(c)) return { item: c[0], qty: 1, unit: c[1], src: "est", note: "" };
         return Object.assign({}, c);
       }),
+
       fixed_opex: (over.fixed_opex || FIXED_OPEX).map(function (o) {
         if (Array.isArray(o)) return { label: o[0], usd: o[1] };
         return Object.assign({}, o);
@@ -218,6 +246,15 @@
   function run(st, over) {
     over = over || {};
     var p = Object.assign({}, st.A, over.A || {});
+    // A state-level phase month wins over the defaults packed into A() only when
+    // the caller did not pass its own value (neither top-level nor inside A).
+    var oA = over.A || {};
+    if (oA.phase2_month == null && over.phase2_month == null && st.phase2_month != null) {
+      p.phase2_month = st.phase2_month;
+    }
+    if (oA.phase3_month == null && over.phase3_month == null && st.phase3_month != null) {
+      p.phase3_month = st.phase3_month;
+    }
     var vol = over.vol != null ? over.vol : 1;
     var cap = capex(st, p);
     var m2 = p.phase2_month - 1, m3 = p.phase3_month - 1;
@@ -432,6 +469,7 @@
 
   var API = {
     A: A, MENU: MENU, CAPEX_P1: CAPEX_P1, CAPEX_P2: CAPEX_P2, CAPEX_P3: CAPEX_P3,
+    LEAN_BOM: LEAN_BOM, LEAN_PCT: LEAN_PCT, PRESETS: PRESETS,
     FIXED_OPEX: FIXED_OPEX, RAMP: RAMP, SEASON: SEASON, SEASONAL: SEASONAL, LAB: LAB,
     makeState: makeState, clone: clone, capex: capex, run: run, metrics: metrics,
     scenarios: scenarios, queue: queue, minutesPerOrder: minutesPerOrder,
