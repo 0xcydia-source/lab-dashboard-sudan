@@ -611,40 +611,9 @@
 
   <section data-panel="plan" hidden>
     <div class="note info">
-      This <strong>is</strong> the study. Everything below is generated in your browser from the
-      numbers on the other tabs — there is nothing to download to read it. Edit a field, come
-      back, and the study rewrites itself. Print it or save it as a PDF when you want a copy.
-    </div>
-
-    <div class="card">
-      <h2>Study details</h2>
-      <p class="sub">Free text, all optional. What you type appears in the study below.</p>
-      <div class="fields">
-        <div class="field"><label for="plan-name">Project / study name</label>
-          <input type="text" id="plan-name" placeholder="e.g. Arkawit Medical Lab"></div>
-        <div class="field"><label for="plan-location">Location</label>
-          <input type="text" id="plan-location" placeholder="City / district"></div>
-        <div class="field"><label for="plan-owner">Owner</label>
-          <input type="text" id="plan-owner" placeholder="Name"></div>
-        <div class="field"><label for="plan-date">Date</label>
-          <input type="text" id="plan-date" placeholder="2026"></div>
-        <div class="field"><label for="plan-area">Floor area (m2)</label>
-          <input type="text" id="plan-area" placeholder="60"></div>
-        <div class="field"><label for="plan-notes">Executive summary</label>
-          <input type="text" id="plan-notes" placeholder="Two lines that sum up the idea"></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Analysis in your words</h2>
-      <div class="fields" style="grid-template-columns:1fr">
-        <div class="field"><label for="plan-strengths">Strengths</label>
-          <textarea id="plan-strengths" rows="3" placeholder="What makes it work"></textarea></div>
-        <div class="field"><label for="plan-weaknesses">Weaknesses and risks</label>
-          <textarea id="plan-weaknesses" rows="3" placeholder="What could stop it"></textarea></div>
-        <div class="field"><label for="plan-recommendations">Recommendations</label>
-          <textarea id="plan-recommendations" rows="3" placeholder="What to do next"></textarea></div>
-      </div>
+      This <strong>is</strong> the study — generated here from the numbers on the other tabs, with
+      nothing to download to read it. Change a price or an assumption and it rewrites itself.
+      The Arabic edition and the Excel model are optional exports, further down the page.
     </div>
 
     <div class="card reportcard">
@@ -658,6 +627,41 @@
       <p class="sub">12 sections, every table and chart rebuilt from the numbers you entered.</p>
       <div id="report-host" class="report"></div>
     </div>
+
+    <details class="study-inputs">
+      <summary>Study details and your own analysis — optional, click to edit</summary>
+      <div class="card">
+        <h2>Study details</h2>
+        <p class="sub">Free text, all optional. What you type appears in the study above.</p>
+        <div class="fields">
+          <div class="field"><label for="plan-name">Project / study name</label>
+            <input type="text" id="plan-name" placeholder="e.g. Arkawit Medical Lab"></div>
+          <div class="field"><label for="plan-location">Location</label>
+            <input type="text" id="plan-location" placeholder="City / district"></div>
+          <div class="field"><label for="plan-owner">Owner</label>
+            <input type="text" id="plan-owner" placeholder="Name"></div>
+          <div class="field"><label for="plan-date">Date</label>
+            <input type="text" id="plan-date" placeholder="2026"></div>
+          <div class="field"><label for="plan-area">Floor area (m2)</label>
+            <input type="text" id="plan-area" placeholder="60"></div>
+          <div class="field"><label for="plan-notes">Executive summary</label>
+            <input type="text" id="plan-notes" placeholder="Two lines that sum up the idea"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Analysis in your words</h2>
+        <div class="fields" style="grid-template-columns:1fr">
+          <div class="field"><label for="plan-strengths">Strengths</label>
+            <textarea id="plan-strengths" rows="3" placeholder="What makes it work"></textarea></div>
+          <div class="field"><label for="plan-weaknesses">Weaknesses and risks</label>
+            <textarea id="plan-weaknesses" rows="3" placeholder="What could stop it"></textarea></div>
+          <div class="field"><label for="plan-recommendations">Recommendations</label>
+            <textarea id="plan-recommendations" rows="3" placeholder="What to do next"></textarea></div>
+        </div>
+      </div>
+    </details>
+
   </section>
 
   <div class="note" style="margin-top:6px">
@@ -668,7 +672,7 @@
 </main>
 
 <footer class="foot">
-  <p>Laboratory Feasibility Dashboard - 36-month model</p>
+  <p>Medical laboratory feasibility study · 36-month model</p>
   <p class="small">Your data stays in this browser. No account, no upload.</p>
 </footer>
 

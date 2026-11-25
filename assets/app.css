@@ -1137,3 +1137,23 @@ html[dir="ltr"] .tcard-f { flex-direction: row; }
   .report .grid.c2 { display: block; }
   .report .chart { height: 200px; }
 }
+
+/* the study first, the optional inputs folded away */
+.study-inputs { margin-top: 16px; }
+.study-inputs > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fafbfd;
+  list-style: none;
+}
+.study-inputs > summary::-webkit-details-marker { display: none; }
+.study-inputs > summary::before { content: "▸ "; color: var(--ink-3); }
+.study-inputs[open] > summary::before { content: "▾ "; }
+.study-inputs > summary:hover { background: var(--line-2); }
+.study-inputs .card:first-of-type { margin-top: 12px; }
+@media print { .study-inputs { display: none !important; } }
