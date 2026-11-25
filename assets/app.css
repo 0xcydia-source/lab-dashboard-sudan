@@ -982,3 +982,158 @@ html[dir="ltr"] #capex1-table td input.wide,
 html[dir="ltr"] #opex-table td input.wide { text-align: left; }
 html[dir="ltr"] .tcard-h { justify-content: space-between; }
 html[dir="ltr"] .tcard-f { flex-direction: row; }
+
+/* ==========================================================================
+   In-browser study (report-host): the website IS the deliverable
+   ========================================================================== */
+.rpt-toc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 4px 0 20px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fafbfd;
+  font-size: 12.5px;
+}
+.rpt-toc a { color: var(--navy); white-space: nowrap; }
+.rpt-toc a:hover { text-decoration: underline; }
+
+.report h2 { scroll-margin-top: 72px; }
+.report table.tbl { margin: 10px 0 14px; }
+.report table.tbl th, .report table.tbl td { white-space: normal; }
+.report .rpt-kpis { margin: 16px 0 18px; }
+.report h3 { margin: 18px 0 6px; }
+
+.rpt-callout {
+  border-inline-start: 3px solid var(--navy);
+  background: #f2f7fb;
+  border-radius: var(--radius-sm);
+  padding: 10px 13px;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #23445c;
+  margin: 12px 0;
+}
+
+/* tornado (one-at-a-time sensitivity) drawn inside the study */
+.torn { margin: 0 0 12px; }
+.torn-h {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  margin-bottom: 3px;
+}
+.torn-h span:first-child { font-weight: 600; color: var(--ink); }
+.torn-h span:last-child { font-variant-numeric: tabular-nums; color: var(--ink-3); }
+.torn-bar {
+  position: relative;
+  height: 15px;
+  background: #f2f5f8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.torn-bar i { position: absolute; top: 0; bottom: 0; opacity: .9; }
+.torn-bar u {
+  position: absolute;
+  top: -2px; bottom: -2px;
+  width: 2px;
+  background: #16212b;
+  text-decoration: none;
+}
+.torn-f {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--ink-3);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+
+/* printing the study on its own */
+@media print {
+  body.print-report .report { font-size: 11.5px; }
+  body.print-report .report .tw { overflow: visible; }
+  body.print-report .report table.tbl { page-break-inside: auto; font-size: 10.5px; }
+  body.print-report .report tr { page-break-inside: avoid; }
+  body.print-report .report h2 { page-break-before: auto; page-break-after: avoid; }
+  body.print-report .report .rpt-toc { display: none; }
+}
+
+/* header nav: the study is the primary destination */
+.topnav a.quiet { color: var(--ink-3); font-weight: 500; }
+.topnav a.quiet:hover { color: var(--navy); }
+@media (max-width: 760px) {
+  .topnav a[data-goto="capex"] { display: none; }
+}
+
+/* -------------------------------------------------------------------- print
+   Two print modes:
+   - plain Ctrl/Cmd+P → the dashboard prints as it looks
+   - "Print / Save PDF" → only the study prints, everything else hidden
+   --------------------------------------------------------------------- */
+@media print {
+  @page { size: A4; margin: 14mm 12mm; }
+
+  /* the app chrome never belongs on paper */
+  .topbar, .toolbar, .tabs, .foot, #empty-hint,
+  .pagehead, .kpis:not(.rpt-kpis), .note:not(.rpt-callout) { display: none !important; }
+
+  body { background: #fff !important; }
+  .wrap { max-width: none; padding: 0; }
+
+  body.print-report [data-panel]:not([data-panel="plan"]) { display: none !important; }
+  body.print-report [data-panel="plan"] > .card:not(.reportcard) { display: none !important; }
+  body.print-report .reportcard {
+    border: 0; box-shadow: none; padding: 0; margin: 0;
+  }
+  body.print-report .reportcard > .cardhead,
+  body.print-report .reportcard > .sub { display: none !important; }
+
+  .report { border-top: 0; margin: 0; padding: 0; font-size: 11px; }
+  .report h1 { font-size: 20px; }
+  .report h2 {
+    font-size: 14px;
+    margin: 16px 0 6px;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  .report h3 { font-size: 12px; page-break-after: avoid; break-after: avoid; }
+  .report p { font-size: 11px; line-height: 1.55; text-align: justify; }
+  .report .rpt-toc { display: none; }
+  .report .rpt-kpis {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .report .rk b { font-size: 12.5px; }
+  .report .rk span { font-size: 9px; }
+  .report .tw { overflow: visible; }
+  .report table.tbl { font-size: 9px; page-break-inside: auto; }
+  .report table.tbl th, .report table.tbl td { padding: 3px 5px; }
+  .report tr, .report .torn, .report figure { page-break-inside: avoid; break-inside: avoid; }
+  .report thead { display: table-header-group; }
+  /* let each chart size itself: the report draws an SVG for FX and a div-based
+     histogram, and a fixed height clips one of them into the caption */
+  .report .chart { height: auto !important; min-height: 150px; page-break-inside: avoid; }
+  .report .chart svg { max-height: 190px; }
+  .report .grid.c2 { grid-template-columns: 1fr 1fr; }
+  .rpt-callout { page-break-inside: avoid; }
+  a { color: inherit; text-decoration: none; }
+}
+
+/* the in-page study on a phone: tables scroll, headings stay tight */
+@media (max-width: 640px) {
+  .report .rpt-kpis { grid-template-columns: repeat(2, 1fr); }
+  .report .rpt-toc { display: grid; grid-template-columns: minmax(0, 1fr); font-size: 12px; padding: 10px; }
+  .report .rpt-toc a { white-space: normal; }
+  .report table.tbl { font-size: 11px; }
+  .report table.tbl th, .report table.tbl td { padding: 6px 7px; }
+  .report .tw { margin: 0 -6px; padding: 0 6px; }
+  .report .grid.c2 { display: block; }
+  .report .chart { height: 200px; }
+}

@@ -1118,8 +1118,8 @@
 
   /* a small histogram drawn as plain divs: no SVG text anchoring problems,
    * and it reflows on a phone like every other block */
-  function drawMcHistogram() {
-    var host = $("#ch-mc");
+  function drawMcHistogram(hostSel, noteSel) {
+    var host = $(hostSel || "#ch-mc");
     if (!host || !mc || !mc.rows) return;
     var vals = mc.rows.map(function (r) { return r.npv; });
     // clip to the 1st-99th percentile: a handful of extreme draws would
@@ -1152,14 +1152,14 @@
       "</div>" +
       '<div style="display:flex;justify-content:space-between;font-size:11.5px;color:#7b8794;margin-top:6px">' +
         "<span>" + usd(lo) + "</span><span>" + usd(base) + " (point estimate)</span><span>" + usd(hi) + "</span></div>";
-    var note = $("#mc-note");
+    var note = $(noteSel || "#mc-note");
     if (note) note.textContent = nf(mc.sm.n) + " simulations, axis clipped to the 1st-99th percentile (" +
       clipped + " extreme runs left out). Green = better than your point estimate, amber = positive but " +
       "below it, red = a loss.";
   }
 
-  function drawMcRho() {
-    var host = $("#ch-mcrho");
+  function drawMcRho(hostSel) {
+    var host = $(hostSel || "#ch-mcrho");
     if (!host || !mc || !mc.rho) return;
     var LABELS = {
       vol: "Daily order volume", price_index: "Realized price",
@@ -1181,8 +1181,8 @@
     }).join("");
   }
 
-  function drawFxChart() {
-    var host = $("#ch-fx");
+  function drawFxChart(hostSel, noteSel) {
+    var host = $(hostSel || "#ch-fx");
     if (!host) return;
     var rows = M.fxLadder(results.st);
     host.innerHTML = "";
@@ -1217,7 +1217,7 @@
     rows.forEach(function (r, i) {
       if (i % 2 === 0) svgText(svg, (r.drift * 100).toFixed(0) + "%", X(i), H - 6, { anchor: "middle" });
     });
-    var note = $("#fx-note");
+    var note = $(noteSel || "#fx-note");
     if (note && rows.length) {
       var last = rows[rows.length - 1];
       note.textContent = "At " + (last.drift * 100).toFixed(0) +
@@ -1313,6 +1313,8 @@
       mcBusy = false;
       updateMcStatus(nf(rows.length) + " simulations finished. Change an assumption to run again.");
       drawQuant();
+      // the study quotes the distribution: refresh it as soon as the numbers exist
+      if (currentTab() === "plan") renderReport();
     }
     setTimeout(step, 0);
   }
@@ -1333,6 +1335,18 @@
     var b = $("#tabs button[aria-selected='true']");
     return b ? b.getAttribute("data-tab") : "overview";
   }
+  function selectTab(name) {
+    $$("#tabs button").forEach(function (x) {
+      x.setAttribute("aria-selected", String(x.getAttribute("data-tab") === name));
+    });
+    $$(".topnav a[data-goto]").forEach(function (a) {
+      a.classList.toggle("on", a.getAttribute("data-goto") === name);
+    });
+    var planLink = $("#nav-plan");
+    if (planLink) planLink.classList.toggle("on", name === "plan");
+    renderTab(name);
+  }
+
   function renderTab(name) {
     $$("[data-panel]").forEach(function (p) {
       p.hidden = p.getAttribute("data-panel") !== name;
@@ -1351,7 +1365,11 @@
         else drawQuant();
       }, 20);
     }
-    if (name === "plan") { syncPlanInputs(); renderReport(); }
+    if (name === "plan") {
+      syncPlanInputs();
+      renderReport();
+      if (!mc && !mcBusy) runMonteCarlo(true);
+    }
     if (name === "overview") {
       setTimeout(function () {
         if (!results.scen) compute(true);
@@ -1464,6 +1482,9 @@
   }
 
   /* ---------------------------------------------------- editable plan text */
+  var SEASON_MIN = Math.min.apply(null, Object.keys(M.SEASON).map(function (k) { return M.SEASON[k]; }));
+  var SEASON_MAX = Math.max.apply(null, Object.keys(M.SEASON).map(function (k) { return M.SEASON[k]; }));
+
   var PLAN_FIELDS = {
     "plan-name": "name", "plan-location": "location", "plan-owner": "owner",
     "plan-date": "date", "plan-area": "area", "plan-notes": "notes",
@@ -1486,109 +1507,429 @@
       el.addEventListener("input", function () {
         state.plan[PLAN_FIELDS[id]] = el.value;
         el.className = "changed";
-        renderReport();     // the plan text is not part of the financial model
+        // rewrite only the paragraphs that quote the plan text, so the field the
+        // owner is typing in never loses focus or caret position
+        updatePlanText();
         save();
       });
     });
   }
 
-  /* render the editable report page from the CURRENT numbers */
+  /* ------------------------------------------------------------------ study
+   * The Feasibility-study tab is the deliverable: a complete, printable study
+   * built from the numbers currently on screen. It is not a summary that points
+   * at a PDF — everything the owner needs to decide is rendered here.
+   * ---------------------------------------------------------------------- */
+
+  function tbl(headers, rows, cls, foot) {
+    return "<div class='tw'><table class='tbl " + (cls || "") + "'><thead><tr>" +
+      headers.map(function (h, i) {
+        return "<th" + (i ? " class='num'" : "") + ">" + esc(h) + "</th>";
+      }).join("") + "</tr></thead><tbody>" + rows + "</tbody>" +
+      (foot ? "<tfoot>" + foot + "</tfoot>" : "") + "</table></div>";
+  }
+  function kpis(items) {
+    return "<section class='rpt-kpis'>" + items.map(function (k) {
+      return "<div class='rk'><span>" + esc(k[0]) + "</span><b>" + esc(k[1]) + "</b></div>";
+    }).join("") + "</section>";
+  }
+
+  /* one-at-a-time swings, computed live from the current inputs */
+  function tornadoRows() {
+    var st = results.st, p = st.A;
+    function npv(st2, over) { return M.metrics(M.run(st2, over || {})).npv22; }
+    function withA(patch) {
+      return Object.assign({}, st, { A: Object.assign({}, st.A, patch) });
+    }
+    var T = [
+      ["Daily order volume", 0.60, 1.40, "%",
+       function (v) { return npv(st, { vol: v }); }],
+      ["Reagent cost per test", 0.65, 1.45, "%",
+       function (v) { return npv(withA({ vc_mult: v })); }],
+      ["Realised price", 0.85, 1.15, "%",
+       function (v) { return npv(withA({ price_index: p.price_index * v })); }],
+      ["Tests per patient", 1.20, 1.85, "x",
+       function (v) { return npv(withA({ tests_per_patient: v })); }],
+      ["FX pass-through", 0.50, 1.00, "%",
+       function (v) { return npv(withA({ pass_through: v })); }],
+      ["Price-list lag (months)", 0, 4, "mo",
+       function (v) { return npv(withA({ pass_lag_months: v })); }],
+      ["SDG depreciation / year", 0.10, 0.60, "%",
+       function (v) { return npv(withA({ fx_drift: v })); }],
+      ["Fixed costs", 0.85, 1.20, "%",
+       function (v) { return npv(withA({ opex_mult: v })); }],
+      ["Equipment price", 0.80, 1.30, "%",
+       function (v) { return npv(withA({ capex_mult: v })); }]
+    ];
+    var base = results.m.npv22;
+    var rows = T.map(function (t) {
+      var lo = t[4](t[1]), hi = t[4](t[2]);
+      return { name: t[0], lo: lo, hi: hi, loV: t[1], hiV: t[2], unit: t[3],
+               swing: Math.abs(lo - hi) };
+    });
+    rows.sort(function (a, b) { return b.swing - a.swing; });
+    return { base: base, rows: rows };
+  }
+
+  function drawReportTornado() {
+    var host = $("#rpt-tornado");
+    if (!host) return;
+    var t = tornadoRows(), rows = t.rows, base = t.base;
+    var all = [base];
+    rows.forEach(function (r) { all.push(r.lo, r.hi); });
+    var lo = Math.min.apply(null, all), hi = Math.max.apply(null, all);
+    var span = (hi - lo) || 1;
+    lo -= span * .04; hi += span * .04;
+    var pos = function (v) { return (v - lo) / (hi - lo) * 100; };
+    host.innerHTML = rows.map(function (r) {
+      var a = pos(r.lo), b = pos(r.hi), m = pos(base);
+      var rng = r.unit === "%" ? (r.loV * 100).toFixed(0) + "% – " + (r.hiV * 100).toFixed(0) + "%"
+        : r.unit === "x" ? r.loV + "x – " + r.hiV + "x"
+        : r.loV + " – " + r.hiV + " months";
+      return "<div class='torn'>" +
+        "<div class='torn-h'><span>" + esc(r.name) + "</span><span>" + esc(rng) + "</span></div>" +
+        "<div class='torn-bar'>" +
+          "<i style='left:" + Math.min(a, m).toFixed(2) + "%;width:" +
+            Math.max(.7, Math.abs(m - a)).toFixed(2) + "%;background:#a3261f'></i>" +
+          "<i style='left:" + Math.min(b, m).toFixed(2) + "%;width:" +
+            Math.max(.7, Math.abs(b - m)).toFixed(2) + "%;background:#1d7a4d'></i>" +
+          "<u style='left:" + m.toFixed(2) + "%'></u>" +
+        "</div>" +
+        "<div class='torn-f'><span>" + usd(r.lo) + "</span><span>" + usd(base) +
+          "</span><span>" + usd(r.hi) + "</span></div>" +
+      "</div>";
+    }).join("") +
+      "<p class='chart-note'>Each bar moves one input to its low (red) and high (green) value " +
+      "and recomputes the whole 36-month model. Sorted by how much that input can move NPV.</p>";
+  }
+
+  /* Replace just the free-text paragraphs of the study in place. */
+  function updatePlanText() {
+    var host = $("#report-host");
+    if (!host) return;
+    var plan = state.plan || EMPTY_PLAN();
+    var val = function (k, fallback) { return (plan[k] || "").trim() || fallback; };
+    var set = function (sel, txt) {
+      var el = host.querySelector(sel);
+      if (el && el.textContent !== txt) el.textContent = txt;
+    };
+    var h1 = host.querySelector(".rpt-head h1");
+    if (h1) h1.textContent = val("name", "Medical Laboratory Feasibility Study");
+    set("#rpt-strengths", val("strengths", "—"));
+    set("#rpt-weaknesses", val("weaknesses", "—"));
+    set("#rpt-recommendations", val("recommendations", "—"));
+    set("#rpt-summary", val("notes", ""));
+  }
+
   function renderReport() {
     var host = $("#report-host");
     if (!host) return;
-    var m = results.m, ms = results.base.months, st = results.st;
+    var m = results.m, ms = results.base.months, st = results.st, cap = results.base.capex;
     var plan = state.plan || EMPTY_PLAN();
     var val = function (k, fallback) { return (plan[k] || "").trim() || fallback; };
+    var p = st.A;
 
-    var totalCapex = st.capex_p1.reduce(function (s, c) { return s + c.qty * c.unit; }, 0);
+    /* ---- capex ---- */
     var rowsCapex = st.capex_p1.map(function (c) {
-      return "<tr><td>" + esc(c.item) + "</td><td class='num'>" + nf(c.qty) + "</td><td class='num'>" +
-        usd(c.unit) + "</td><td class='num'>" + usd(c.qty * c.unit) + "</td></tr>";
+      return "<tr><td>" + esc(c.item) + "</td><td class='num'>" + nf(c.qty) +
+        "</td><td class='num'>" + usd(c.unit) + "</td><td class='num'>" +
+        usd(c.qty * c.unit) + "</td></tr>";
+    }).join("");
+    var footCapex =
+      "<tr><td>Equipment subtotal</td><td></td><td></td><td class='num'>" + usd(cap.hardware) + "</td></tr>" +
+      "<tr><td>Freight and clearance (" + nf(state.freight * 100) + "%)</td><td></td><td></td><td class='num'>" + usd(cap.freight) + "</td></tr>" +
+      "<tr><td>Install and training (" + nf(state.install * 100) + "%)</td><td></td><td></td><td class='num'>" + usd(cap.install) + "</td></tr>" +
+      "<tr><td>Opening reagent stock</td><td></td><td></td><td class='num'>" + usd(cap.stock) + "</td></tr>" +
+      "<tr><td>Contingency (" + nf(state.contingency * 100) + "%)</td><td></td><td></td><td class='num'>" + usd(cap.contingency) + "</td></tr>" +
+      "<tr class='total'><td>Phase 1 total</td><td></td><td></td><td class='num'>" + usd(cap.p1) + "</td></tr>";
+
+    var later = st.capex_p2.map(function (c) { return ["Phase 2", c.item, usd(c.qty * c.unit)]; })
+      .concat(st.capex_p3.map(function (c) { return ["Phase 3", c.item, usd(c.qty * c.unit)]; }));
+    var rowsLater = later.map(function (r) {
+      return "<tr><td>" + esc(r[0]) + "</td><td>" + esc(r[1]) + "</td><td class='num'>" + r[2] + "</td></tr>";
     }).join("");
 
+    /* ---- menu ---- */
+    var shares = st.menu.reduce(function (a, t) { return a + t.share; }, 0) || 1;
     var rowsMenu = st.menu.map(function (t) {
-      var per = ms[11].per[t.key] || { n: 0, contribution: 0 };
-      var price = t.price_usd * st.A.price_index;
-      var cm = price - t.vc * st.A.vc_mult * (1 + st.A.import_premium);
+      var price = t.price_usd * p.price_index;
+      var vc = t.vc * p.vc_mult * (1 + p.import_premium);
+      var cm = price - vc;
       var mg = price > 0 ? cm / price * 100 : 0;
-      return "<tr><td>" + esc(t.label) + "</td><td class='num'>" + nf(t.share * 100) + "%</td>" +
-        "<td class='num'>" + usd(price, 2) + "</td><td class='num'>" + usd(t.vc, 2) + "</td>" +
-        "<td class='num'>" + usd(cm, 2) + "</td><td class='num'>" + nf(mg) + "%</td></tr>";
+      var mins = t.tech_min + p.overhead_min_per_order;
+      var perMin = mins > 0 ? cm / mins : 0;
+      return "<tr><td>" + esc(t.label) + "</td><td class='num'>" + nf(t.share / shares * 100) +
+        "%</td><td class='num'>" + usd(price, 2) + "</td><td class='num'>" + usd(vc, 2) +
+        "</td><td class='num'>" + usd(cm, 2) + "</td><td class='num'>" + nf(mg) + "%</td>" +
+        "<td class='num'>" + nf(mins, 1) + "</td><td class='num'>" + usd(perMin, 2) + "</td></tr>";
     }).join("");
 
+    /* ---- opex ---- */
+    var opexSum = st.fixed_opex.reduce(function (a, o) { return a + o.usd; }, 0);
     var rowsOpex = st.fixed_opex.map(function (o) {
       return "<tr><td>" + esc(o.label) + "</td><td class='num'>" + usd(o.usd) +
         "</td><td class='num'>" + usd(o.usd * 12) + "</td></tr>";
     }).join("");
 
-    var rowsMonths = ms.slice(0, 18).map(function (r) {
+    /* ---- monthly ---- */
+    var rowsMonths = ms.map(function (r) {
+      var mg = r.rev > 0 ? r.ebitda / r.rev * 100 : 0;
       return "<tr><td class='num'>" + r.month + "</td><td class='num'>" + nf(r.patients) +
-        "</td><td class='num'>" + nf(r.orders_day) + "</td><td class='num'>" + usd(r.rev) +
-        "</td><td class='num'>" + usd(r.ebitda) + "</td><td class='num'>" + usd(r.cum) + "</td></tr>";
+        "</td><td class='num'>" + nf(r.orders_day) + "</td><td class='num'>" + r.techs +
+        "</td><td class='num'>" + usd(r.rev) + "</td><td class='num'>" + usd(r.ebitda) +
+        "</td><td class='num'>" + nf(mg) + "%</td><td class='num'>" + usd(r.fcf) +
+        "</td><td class='num'>" + usd(r.cum) + "</td></tr>";
     }).join("");
 
+    /* ---- scenarios ---- */
+    var rowsScen = (results.scen || []).map(function (s) {
+      var x = s.m;
+      return "<tr><td>" + esc(s.name) + "</td><td class='num'>" + usd(x.yr1_rev) +
+        "</td><td class='num'>" + usd(x.yr1_ebitda) + "</td><td class='num'>" + usd(x.yr2_ebitda) +
+        "</td><td class='num'>" + (x.payback_months === null ? "—" : nf(x.payback_months, 1)) +
+        "</td><td class='num'>" + usd(x.funding_need) + "</td><td class='num'>" +
+        usd(x.npv22) + "</td><td class='num'>" +
+        (x.be_orders_day === null ? "—" : nf(x.be_orders_day, 1)) + "</td></tr>";
+    }).join("");
+
+    /* ---- repricing + price ladder ---- */
+    var rep = M.repricing(st);
+    var rowsRep = rep.map(function (r) {
+      return "<tr><td class='num'>" + r.lag + "</td><td class='num'>" + usd(r.npv22) +
+        "</td><td class='num'>" + usd(r.m12_ebitda) + "</td><td class='num'>" +
+        (r.pb === null ? "—" : nf(r.pb, 1)) + "</td></tr>";
+    }).join("");
+    var grid = M.pricingGrid(st);
+    var rowsGrid = grid.map(function (g) {
+      var head = g.price_needed > 0 ? m.avg_price_usd / g.price_needed - 1 : 0;
+      return "<tr><td class='num'>" + g.orders_day + "</td><td class='num'>" +
+        usd(g.price_needed, 2) + "</td><td class='num'>" + usd(g.fixed) +
+        "</td><td class='num'>" + usd(m.avg_price_usd, 2) + "</td><td class='num'>" +
+        pct(head * 100, 0) + "</td></tr>";
+    }).join("");
+
+    /* ---- monte carlo (rendered only when it has been run) ---- */
+    var mcBlock = "";
+    if (mc && mc.sm) {
+      var sm = mc.sm;
+      mcBlock =
+        "<h2 id='rpt-mc'>10. Risk: what the simulation says</h2>" +
+        "<p>One scenario is a single point; the decision needs the distribution. The whole model " +
+        "was re-run <b>" + nf(sm.n) + "</b> times with the uncertain inputs varied together, " +
+        "using the widths set on the Assumptions tab.</p>" +
+        kpis([
+          ["Median NPV", usd(sm.npv_p50)],
+          ["10th – 90th percentile", usd(sm.npv_p10) + " – " + usd(sm.npv_p90)],
+          ["Chance of a loss", pct(sm.p_npv_neg * 100, 1)],
+          ["Median payback", sm.pb_p50 === null ? "—" : nf(sm.pb_p50, 1) + " mo"],
+          ["Never pays back", pct(sm.p_never_payback * 100, 1)],
+          ["Cash to hold (90th pct)", usd(sm.fund_p90)]
+        ]) +
+        "<div class='grid c2' style='margin-top:14px'>" +
+          "<div><h3>Distribution of NPV</h3><div id='rpt-mc-chart' class='chart'></div>" +
+            "<p class='chart-note' id='rpt-mc-note'></p></div>" +
+          "<div><h3>What drives the result when everything moves</h3>" +
+            "<div id='rpt-mcrho'></div></div>" +
+        "</div>" +
+        "<p class='rpt-callout'><b>How to read this:</b> the funding target is the 90th percentile " +
+        "cash figure (" + usd(sm.fund_p90) + "), not the point estimate (" + usd(m.funding_need) +
+        "). If that cash is not available, defer Phase 2 rather than shrink Phase 1.</p>";
+    } else {
+      mcBlock = "<h2 id='rpt-mc'>10. Risk: what the simulation says</h2>" +
+        "<p class='empty'>The simulation has not run yet in this session. " +
+        "<button class='btn sm' data-goto='quant'>Open Risk &amp; Monte Carlo</button></p>";
+    }
+
+    var sections = [
+      ["1", "Executive summary"], ["2", "Demand and volume assumptions"],
+      ["3", "Capital expenditure"], ["4", "Test menu and unit economics"],
+      ["5", "Operating costs and team"], ["6", "36-month projection"],
+      ["7", "Break-even and safety margin"], ["8", "What moves the result"],
+      ["9", "Currency exposure and repricing"], ["10", "Risk: what the simulation says"],
+      ["11", "Scenarios"], ["12", "Analysis in your words"]
+    ];
+
     host.innerHTML =
-      '<header class="rpt-head">' +
+      "<header class='rpt-head'>" +
         "<h1>" + esc(val("name", "Medical Laboratory Feasibility Study")) + "</h1>" +
-        '<p class="rpt-meta">' +
-          esc(val("location", "Location not set")) + " · " + esc(val("date", new Date().getFullYear())) +
+        "<p class='rpt-meta'>" + esc(val("location", "Location not set")) + " · " +
+          esc(val("date", new Date().getFullYear())) +
           (plan.owner ? " · " + esc(plan.owner) : "") +
-          (plan.area ? " - " + esc(plan.area) + " m2" : "") +
+          (plan.area ? " · " + esc(plan.area) + " m²" : "") +
         "</p>" +
       "</header>" +
 
-      '<section class="rpt-kpis">' + [
+      kpis([
         ["Total investment", usd(m.capex_total)],
-        ["Cash needed", usd(m.funding_need)],
+        ["Cash needed to open", usd(m.funding_need)],
         ["Payback", m.payback_months === null ? "Never" : nf(m.payback_months, 1) + " mo"],
-        ["EBITDA month 12", usd(m.m12_ebitda)],
-        ["Break-even", nf(m.be_orders_day, 1) + " orders/day"],
-        ["NPV 22%", usd(m.npv22)]
-      ].map(function (k) {
-        return '<div class="rk"><span>' + k[0] + "</span><b>" + k[1] + "</b></div>";
-      }).join("") + "</section>" +
+        ["NPV @ 22%", usd(m.npv22)],
+        ["Break-even", nf(m.be_orders_day, 1) + "/day"],
+        ["EBITDA margin, m12", pct(m.m12_margin, 1)]
+      ]) +
 
-      (plan.notes ? "<h2>Summary</h2><p>" + esc(plan.notes) + "</p>" : "") +
+      "<nav class='rpt-toc'>" + sections.map(function (s) {
+        return "<a href='#rpt-s" + s[0] + "'>" + s[0] + ". " + esc(s[1]) + "</a>";
+      }).join("") + "</nav>" +
 
-      "<h2>1. Capital expenditure</h2>" +
-      "<div class='tw'><table class='tbl'><thead><tr><th>Item</th><th class='num'>Qty</th>" +
-      "<th class='num'>Unit price</th><th class='num'>Total</th></tr></thead><tbody>" +
-      rowsCapex + "</tbody><tfoot><tr class='total'><td>Equipment</td><td></td><td></td><td class='num'>" +
-      usd(totalCapex) + "</td></tr><tr><td>Freight " + nf(state.freight * 100) + "%</td><td></td><td></td>" +
-      "<td class='num'>" + usd(results.base.capex.freight) + "</td></tr>" +
-      "<tr><td>Install " + nf(state.install * 100) + "%</td><td></td><td></td><td class='num'>" +
-      usd(results.base.capex.install) + "</td></tr>" +
-      "<tr><td>Opening stock</td><td></td><td></td><td class='num'>" + usd(results.base.capex.stock) + "</td></tr>" +
-      "<tr><td>Contingency " + nf(state.contingency * 100) + "%</td><td></td><td></td><td class='num'>" +
-      usd(results.base.capex.contingency) + "</td></tr>" +
-      "<tr class='total'><td>Phase 1 total</td><td></td><td></td><td class='num'>" +
-      usd(results.base.capex.p1) + "</td></tr></tfoot></table></div>" +
+      /* 1 ------------------------------------------------------------- */
+      "<h2 id='rpt-s1'>1. Executive summary</h2>" +
+      "<p id='rpt-summary'>" + esc(val("notes",
+        "A " + (plan.area ? plan.area + " m² " : "") + "medical laboratory in " +
+        val("location", "the target location") + " opening with a 3-part haematology analyser and " +
+        "semi-automatic chemistry, priced in USD at " + nf(p.price_index * 100) + "% of the local list.")) +
+      "</p>" +
+      "<p>Opening requires <b>" + usd(cap.p1) + "</b> of capital plus working capital: the " +
+      "cash needed before opening is <b>" + usd(m.funding_need) + "</b>, reached at the lowest " +
+      "point of the cumulative cash curve (month " + m.trough_month + "). The business covers its " +
+      "fixed costs at <b>" + nf(m.be_orders_day, 1) + " orders per day</b> " +
+      "(about " + nf(m.be_patients_day, 0) + " patients), against a month-12 volume of " +
+      nf(m.m12_orders_day, 0) + " orders per day — a safety margin of " + pct(m.mos_pct, 0) + ".</p>" +
+      "<p>Capital is returned in <b>" + (m.payback_months === null ? "more than 36 months" :
+        nf(m.payback_months, 1) + " months") + "</b>; over 36 months the project is worth " +
+      "<b>" + usd(m.npv22) + "</b> at a 22% discount rate" +
+      (m.irr_annual === null ? "" : " (IRR " + nf(m.irr_annual) + "%)") + ".</p>" +
 
-      "<h2>2. Test menu and pricing</h2>" +
-      "<div class='tw'><table class='tbl'><thead><tr><th>Test</th><th class='num'>Order share</th>" +
-      "<th class='num'>Price</th><th class='num'>Reagents</th><th class='num'>Contribution</th>" +
-      "<th class='num'>Margin</th></tr></thead><tbody>" + rowsMenu + "</tbody></table></div>" +
+      /* 2 ------------------------------------------------------------- */
+      "<h2 id='rpt-s2'>2. Demand and volume assumptions</h2>" +
+      tbl(["Assumption", "Value"], [
+        ["Working days per month", nf(p.days)],
+        ["Tests per patient (rising with new sections)", nf(p.tests_per_patient, 2) +
+          " → " + nf(m.tpp_m12, 2) + " by month 12"],
+        ["Patients per day at month 1 / month 12", nf(state.ramp[0], 1) + " / " + nf(state.ramp[11], 1)],
+        ["Patients per day at month 36", nf(ms[35].patients, 1)],
+        ["Orders per day at month 12", nf(m.m12_orders_day, 1)],
+        ["Seasonality", "monthly index " + nf(SEASON_MIN * 100) + "–" + nf(SEASON_MAX * 100) +
+          "% (malaria/ICT peak in September–November), applied at 35% strength"]
+      ].map(function (r) {
+        return "<tr><td>" + esc(r[0]) + "</td><td class='num'>" + esc(r[1]) + "</td></tr>";
+      }).join("")) +
 
-      "<h2>3. Fixed monthly costs</h2>" +
-      "<div class='tw'><table class='tbl'><thead><tr><th>Item</th><th class='num'>Monthly</th>" +
-      "<th class='num'>Yearly</th></tr></thead><tbody>" + rowsOpex +
-      "</tbody><tfoot><tr class='total'><td>Total</td><td class='num'>" +
-      usd(results.base.fixedBase) + "</td><td class='num'>" +
-      usd(results.base.fixedBase * 12) + "</td></tr></tfoot></table></div>" +
+      /* 3 ------------------------------------------------------------- */
+      "<h2 id='rpt-s3'>3. Capital expenditure</h2>" +
+      tbl(["Item", "Qty", "Unit price", "Total"], rowsCapex, "", footCapex) +
+      (rowsLater ? "<h3>Later phases (bought only when demand is proven)</h3>" +
+        tbl(["Phase", "Item", "Cost"], rowsLater) : "") +
+      "<p class='chart-note'>Phase 2 is spent in month " + nf(p.phase2_month) +
+        " (" + usd(ms[Math.min(35, p.phase2_month - 1)] ?
+          usd(st.capex_p2.reduce(function (a, c) { return a + c.qty * c.unit; }, 0)) : "0") +
+        ") and Phase 3 in month " + nf(p.phase3_month) + ". Total across all three phases: " +
+        usd(m.capex_total) + ".</p>" +
 
-      "<h2>4. First 18 months</h2>" +
-      "<div class='tw'><table class='tbl'><thead><tr><th class='num'>Month</th><th class='num'>Patients/day</th>" +
-      "<th class='num'>Orders/day</th><th class='num'>Revenue</th><th class='num'>EBITDA</th>" +
-      "<th class='num'>Cumulative</th></tr></thead><tbody>" + rowsMonths + "</tbody></table></div>" +
+      /* 4 ------------------------------------------------------------- */
+      "<h2 id='rpt-s4'>4. Test menu and unit economics</h2>" +
+      "<p>Shares are re-based to 100% when the model runs. Contribution is the USD price minus " +
+      "reagent cost; the last two columns rank every test by profit per technologist-minute, " +
+      "which is the real capacity constraint.</p>" +
+      tbl(["Test", "Share", "Price", "Reagents", "Contribution", "Margin", "Tech min",
+           "$ per tech-min"], rowsMenu) +
+      "<p class='chart-note'>Average price per order " + usd(m.avg_price_usd, 2) +
+        " · average reagent cost " + usd(m.avg_vc_usd, 2) +
+        " · contribution margin " + pct(m.cm_pct, 1) + ".</p>" +
 
-      "<h2>5. Analysis</h2>" +
-      "<h3>Strengths</h3><p>" + esc(val("strengths", "—")) + "</p>" +
-      "<h3>Weaknesses and risks</h3><p>" + esc(val("weaknesses", "—")) + "</p>" +
-      "<h3>Recommendations</h3><p>" + esc(val("recommendations", "—")) + "</p>" +
+      /* 5 ------------------------------------------------------------- */
+      "<h2 id='rpt-s5'>5. Operating costs and team</h2>" +
+      tbl(["Monthly cost", "Per month", "Per year"], rowsOpex, "",
+        "<tr class='total'><td>Fixed costs total</td><td class='num'>" + usd(opexSum) +
+        "</td><td class='num'>" + usd(opexSum * 12) + "</td></tr>") +
+      "<p>Wages are derived, not typed: the model hires when a technologist passes " +
+        pct(p.hire_at_util * 100, 0) + " utilisation, at " + nf(results.minutes, 1) +
+        " minutes of technologist time per order. Month 12 needs <b>" + m.m12_techs +
+        "</b> technologists and staff wages of <b>" + usd(m.m12_labour) +
+        "</b> per month. Technologist " + usd(st.lab.tech) + ", senior " + usd(st.lab.senior_tech) +
+        ", phlebotomist " + usd(st.lab.phleb) + " per month.</p>" +
 
-      '<p class="rpt-foot">Generated from the dashboard on ' +
-      new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) +
-      ". Every figure comes from the inputs you entered.</p>";
+      /* 6 ------------------------------------------------------------- */
+      "<h2 id='rpt-s6'>6. 36-month projection</h2>" +
+      "<p class='chart-note'>Free cash flow is after tax, capex and the working-capital movement; " +
+        "it is what the owner actually gets back.</p>" +
+      tbl(["Month", "Patients/day", "Orders/day", "Techs", "Net revenue", "EBITDA", "Margin",
+           "Free cash", "Cumulative"], rowsMonths) +
+
+      /* 7 ------------------------------------------------------------- */
+      "<h2 id='rpt-s7'>7. Break-even and safety margin</h2>" +
+      "<p>Using the month-12 cost structure: fixed costs and wages of <b>" +
+        usd(m.fixed_all_m12) + "</b> per month, contribution of <b>" + usd(m.cm_usd, 2) +
+        "</b> per order. Break-even is <b>" + nf(m.be_orders_day, 1) + " orders/day</b> (" +
+        nf(m.be_patients_day, 0) + " patients/day, about " + usd(m.be_rev_usd) +
+        " of monthly revenue). Month-12 volume is " + nf(m.m12_orders_day, 0) +
+        " orders/day, a safety margin of " + pct(m.mos_pct, 0) + ".</p>" +
+      "<p>The price ladder below is the negotiating tool: it is the average price that covers " +
+        "fixed costs, wages and service at each volume. Above that price the lab is safe at " +
+        "that volume; below it, volume growth is the only route back.</p>" +
+      tbl(["Orders/day", "Price needed", "Fixed + wages", "Your average", "Headroom"], rowsGrid) +
+
+      /* 8 ------------------------------------------------------------- */
+      "<h2 id='rpt-s8'>8. What moves the result</h2>" +
+      "<p>Nine inputs, each pushed to a plausible low and high while everything else stays at " +
+        "today's value, and the whole 36-month model recomputed.</p>" +
+      "<div id='rpt-tornado'></div>" +
+
+      /* 9 ------------------------------------------------------------- */
+      "<h2 id='rpt-s9'>9. Currency exposure and repricing</h2>" +
+      "<p>The lab charges in Sudanese pounds and buys reagents in dollars. The menu is priced in " +
+        "USD (the anchor) and the pound list is derived, so when the pound slides the realised " +
+        "dollar price per order falls by the share of the move that was <b>not</b> repriced — and " +
+        "the lag compounds it, because the list in force today was written months ago. " +
+        "Today's assumptions: " + pct(p.pass_through * 100, 0) + " of the move passed through, " +
+        "with a " + nf(p.pass_lag_months) + "-month lag.</p>" +
+      "<div id='rpt-fx' class='chart'></div>" +
+      "<p class='chart-note' id='rpt-fx-note'></p>" +
+      "<h3>The cost of a stale price list</h3>" +
+      tbl(["List age (months)", "NPV @ 22%", "Month-12 EBITDA", "Payback"], rowsRep) +
+      "<p class='chart-note'>Same model, only the repricing lag changes. " +
+        "Repricing monthly instead of every " + rep[rep.length - 1].lag + " months is worth about " +
+        usd(rep[0].npv22 - rep[rep.length - 1].npv22) + " of NPV.</p>" +
+
+      /* 10 ------------------------------------------------------------ */
+      mcBlock +
+
+      /* 11 ------------------------------------------------------------ */
+      "<h2 id='rpt-s11'>11. Scenarios</h2>" +
+      tbl(["Scenario", "Y1 revenue", "Y1 EBITDA", "Y2 EBITDA", "Payback", "Cash needed",
+           "NPV 22%", "Break-even"], rowsScen) +
+
+      /* 12 ------------------------------------------------------------ */
+      "<h2 id='rpt-s12'>12. Analysis in your words</h2>" +
+      "<h3>Strengths</h3><p id='rpt-strengths'>" + esc(val("strengths", "—")) + "</p>" +
+      "<h3>Weaknesses and risks</h3><p id='rpt-weaknesses'>" + esc(val("weaknesses", "—")) + "</p>" +
+      "<h3>Recommendations</h3><p id='rpt-recommendations'>" + esc(val("recommendations", "—")) + "</p>" +
+
+      "<p class='rpt-foot'>Generated in this browser on " +
+        new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) +
+        " from the inputs on the other tabs. Every figure is computed by the same model; " +
+        "nothing is typed by hand.</p>";
+
+    var cnt = $("#study-count");
+    if (cnt) cnt.textContent = ms.length + " months · " + st.menu.length + " tests";
+
+    /* charts inside the study */
+    drawReportTornado();
+    if (mc) {
+      drawMcHistogram("#rpt-mc-chart", "#rpt-mc-note");
+      drawMcRho("#rpt-mcrho");
+    }
+    drawFxChart("#rpt-fx", "#rpt-fx-note");
+  }
+
+  /* a standalone copy of the study, so it can be shared without the app */
+  function studyHtml() {
+    var host = $("#report-host");
+    if (!host) return "";
+    var css = "";
+    try {
+      css = Array.prototype.slice.call(document.styleSheets)
+        .filter(function (ss) { return ss.href && /app\.css/.test(ss.href); })
+        .map(function (ss) {
+          return Array.prototype.slice.call(ss.cssRules || []).map(function (r) { return r.cssText; }).join("\n");
+        }).join("\n");
+    } catch (e) { css = ""; }
+    return "<!DOCTYPE html><html lang='en' dir='ltr'><head><meta charset='utf-8'>" +
+      "<meta name='viewport' content='width=device-width, initial-scale=1'>" +
+      "<title>" + esc((state.plan && state.plan.name) || "Laboratory feasibility study") + "</title>" +
+      "<style>body{margin:0;background:#fff}" + css +
+      ".wrap{max-width:960px;margin:0 auto;padding:28px 20px 80px}</style></head><body>" +
+      "<div class='wrap report'>" + host.innerHTML + "</div></body></html>";
   }
 
   /* ------------------------------------------------------- add / delete rows */
@@ -1643,9 +1984,29 @@
     if (mcBtn) mcBtn.addEventListener("click", function () { runMonteCarlo(true); });
     var pr = $("#btn-print-report");
     if (pr) pr.addEventListener("click", function () {
+      if (!mc) {
+        // one short run is enough to fill section 10, then print the real thing
+        pr.disabled = true;
+        var done = function () {
+          pr.disabled = false;
+          setTimeout(function () {
+            document.body.classList.add("print-report");
+            window.print();
+            setTimeout(function () { document.body.classList.remove("print-report"); }, 500);
+          }, 250);
+        };
+        var origDraw = drawQuant;
+        drawQuant = function () { origDraw(); drawQuant = origDraw; renderReport(); done(); };
+        runMonteCarlo(true);
+        return;
+      }
       document.body.classList.add("print-report");
       window.print();
       setTimeout(function () { document.body.classList.remove("print-report"); }, 500);
+    });
+    var dlStudy = $("#btn-study-html");
+    if (dlStudy) dlStudy.addEventListener("click", function () {
+      download("lab-feasibility-study.html", studyHtml(), "text/html;charset=utf-8");
     });
 
     $("#btn-json").addEventListener("click", function () {
@@ -1700,22 +2061,26 @@
       ev.preventDefault();
       var b = $('#tabs button[data-tab="' + g.getAttribute("data-goto") + '"]');
       if (b) b.click();
+      else selectTab(g.getAttribute("data-goto"));
+    });
+
+    var openStudy = $("#btn-study");
+    if (openStudy) openStudy.addEventListener("click", function () {
+      selectTab("plan");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     var navPlan = $("#nav-plan");
     if (navPlan) navPlan.addEventListener("click", function (ev) {
       ev.preventDefault();
-      var b = $('#tabs button[data-tab="plan"]');
-      if (b) b.click();
+      selectTab("plan");
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
 
     $$("#tabs button").forEach(function (b) {
       b.addEventListener("click", function () {
-        $$("#tabs button").forEach(function (x) { x.setAttribute("aria-selected", "false"); });
-        b.setAttribute("aria-selected", "true");
         if (b.scrollIntoView) b.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
-        renderTab(b.getAttribute("data-tab"));
+        selectTab(b.getAttribute("data-tab"));
       });
     });
   }
@@ -1738,7 +2103,7 @@
     wireRowActions();
     wireCardInputs();
     wirePlanInputs();
-    renderTab("overview");
+    selectTab(/plan/.test(location.hash) ? "plan" : "overview");
     syncAssumptionInputs();
     syncPlanInputs();
     renderReport();

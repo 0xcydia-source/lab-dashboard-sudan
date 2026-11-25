@@ -14,20 +14,21 @@
 <header class="topbar">
   <a class="brand" href="index.html"><span class="logo" aria-hidden="true">🧪</span><span class="brandtxt">Arkawit Lab</span></a>
   <nav class="topnav">
-    <a href="index.html" class="on">Dashboard</a>
-    <a href="#plan" id="nav-plan">Feasibility study</a>
-    <a href="study.html">Original report (AR)</a>
-    <a href="out/دراسة_جدوى_معمل_طبي_الخرطوم.pdf" download>PDF (AR)</a>
-    <a href="out/نموذج_المعمل_القابل_للتعديل.xlsx" download>Excel</a>
+    <a href="#plan" id="nav-plan" class="on">The study</a>
+    <a href="#tests" data-goto="tests">Tests &amp; prices</a>
+    <a href="#capex" data-goto="capex">Equipment</a>
+    <a href="#quant" data-goto="quant">Risk &amp; Monte Carlo</a>
+    <a href="study.html" class="quiet">Arabic edition</a>
   </nav>
 </header>
 
 <main class="wrap">
 
   <div class="pagehead">
-    <h1>Laboratory Feasibility Dashboard</h1>
-    <p>Change any number below and every metric and chart updates instantly. Your data stays in this
-       browser only - nothing is sent anywhere. Amber fields are the ones you edited.</p>
+    <h1>Medical laboratory feasibility study</h1>
+    <p>The study is generated here, in this page, from the numbers you enter. Change a price, a
+       cost or an assumption and every section, table and chart is rewritten. Nothing is sent
+       anywhere; your data stays in this browser. Amber fields are the ones you edited.</p>
   </div>
 
   <div class="note info" id="empty-hint" hidden>
@@ -42,11 +43,13 @@
 
   <div class="toolbar">
     <button class="btn primary" id="btn-print">Print / Save PDF</button>
+    <button class="btn" id="btn-study">Open the study</button>
     <button class="btn" id="btn-json">Export data (JSON)</button>
     <button class="btn" id="btn-load">Import data</button>
     <button class="btn" id="btn-empty">Start blank</button>
     <button class="btn ghost" id="btn-reset">Restore example</button>
     <input type="file" id="file-input" accept="application/json" class="visually-hidden">
+    <a class="btn ghost" href="out/نموذج_المعمل_القابل_للتعديل.xlsx" download>Excel model</a>
     <span class="pill" id="save-state" style="margin-inline-start:auto">Saved automatically</span>
   </div>
 
@@ -607,9 +610,15 @@
   </section>
 
   <section data-panel="plan" hidden>
+    <div class="note info">
+      This <strong>is</strong> the study. Everything below is generated in your browser from the
+      numbers on the other tabs — there is nothing to download to read it. Edit a field, come
+      back, and the study rewrites itself. Print it or save it as a PDF when you want a copy.
+    </div>
+
     <div class="card">
-      <h2>Study details - write them your way</h2>
-      <p class="sub">Every field is free text and optional. What you type appears in the report below.</p>
+      <h2>Study details</h2>
+      <p class="sub">Free text, all optional. What you type appears in the study below.</p>
       <div class="fields">
         <div class="field"><label for="plan-name">Project / study name</label>
           <input type="text" id="plan-name" placeholder="e.g. Arkawit Medical Lab"></div>
@@ -627,7 +636,7 @@
     </div>
 
     <div class="card">
-      <h2>Analysis - in your words</h2>
+      <h2>Analysis in your words</h2>
       <div class="fields" style="grid-template-columns:1fr">
         <div class="field"><label for="plan-strengths">Strengths</label>
           <textarea id="plan-strengths" rows="3" placeholder="What makes it work"></textarea></div>
@@ -639,11 +648,14 @@
     </div>
 
     <div class="card reportcard">
-      <h2 style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-        <span>Final draft</span>
-        <button class="btn sm primary" id="btn-print-report">Print / Save PDF</button>
-      </h2>
-      <p class="sub">Rebuilt automatically from the numbers above. Print or export to PDF.</p>
+      <div class="cardhead">
+        <h2>The study <span class="pill" id="study-count"></span></h2>
+        <span style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn sm" id="btn-study-html">Download as one file</button>
+          <button class="btn sm primary" id="btn-print-report">Print / Save PDF</button>
+        </span>
+      </div>
+      <p class="sub">12 sections, every table and chart rebuilt from the numbers you entered.</p>
       <div id="report-host" class="report"></div>
     </div>
   </section>
