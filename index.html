@@ -26,9 +26,8 @@
 
   <div class="pagehead">
     <h1>Medical laboratory feasibility study</h1>
-    <p>The study is generated here, in this page, from the numbers you enter. Change a price, a
-       cost or an assumption and every section, table and chart is rewritten. Nothing is sent
-       anywhere; your data stays in this browser. Amber fields are the ones you edited.</p>
+    <p>Every chart is built from the numbers on this page. Change one and it all redraws.
+       Nothing is uploaded; the browser keeps your data.</p>
   </div>
 
   <div class="note info" id="empty-hint" hidden>
@@ -55,9 +54,10 @@
   </div>
 
   <div class="tabs" role="tablist" id="tabs">
-    <button role="tab" aria-selected="true" data-tab="overview">Overview</button>
+    <button role="tab" aria-selected="true" data-tab="budget">What $5,000 buys</button>
     <button role="tab" aria-selected="false" data-tab="tests">Tests &amp; pricing</button>
-    <button role="tab" aria-selected="false" data-tab="capex">Equipment &amp; set-up</button>
+    <button role="tab" aria-selected="false" data-tab="outlook">Overview &amp; money</button>
+    <button role="tab" aria-selected="false" data-tab="capex">Equipment</button>
     <button role="tab" aria-selected="false" data-tab="opex">Monthly costs</button>
     <button role="tab" aria-selected="false" data-tab="assumptions">Assumptions</button>
     <button role="tab" aria-selected="false" data-tab="monthly">Monthly results</button>
@@ -66,11 +66,12 @@
   </div>
 
   <!-- -------------------------------------------------------- tab: overview -->
-  <section data-panel="overview">
+  <section data-panel="outlook" hidden>
+    <section class="kpis" id="outlook-kpis" aria-label="Money summary"></section>
     <div class="grid c2">
       <div class="card">
         <h2>Cumulative cash flow</h2>
-        <p class="sub">36 months - base, conservative and optimistic</p>
+        <p class="sub">When the money comes back — three futures</p>
         <div id="ch-cashflow" class="chart tall"></div>
         <div class="legend">
           <span><i style="background:#12507a"></i>Base</span>
@@ -82,7 +83,7 @@
 
       <div class="card">
         <h2>Break-even</h2>
-        <p class="sub">Orders per day needed to cover fixed costs and wages</p>
+        <p class="sub">Orders per day to cover everything fixed</p>
         <div id="ch-breakeven" class="chart tall"></div>
         <p class="chart-note" id="breakeven-note"></p>
       </div>
@@ -91,7 +92,7 @@
     <div class="grid c2">
       <div class="card">
         <h2>Revenue vs cash cost</h2>
-        <p class="sub">Monthly - base case</p>
+        <p class="sub">Monthly, base case — the gap is profit</p>
         <div id="ch-monthly" class="chart"></div>
         <div class="legend">
           <span><i style="background:#12507a"></i>Net revenue</span>
@@ -163,6 +164,69 @@
         </table>
       </div>
       <p class="chart-note" id="menu-note"></p>
+    </div>
+  </section>
+
+  <!-- ---------------------------------------------------------- tab: budget -->
+  <section data-panel="budget" hidden>
+    <div class="note info">
+      Your budget is <strong>$5,000</strong>. This tab answers one question with pictures:
+      <strong>what fits, what does not, and what the gap costs you.</strong>
+      Every price is landed at Port Sudan on your own chain (×1.43); nothing is made up.
+    </div>
+
+    <section class="kpis" id="budget-kpis" aria-label="Budget summary"></section>
+
+    <div class="card">
+      <h2>The $5,000 decision, in one picture</h2>
+      <p class="sub">What fits inside $5,000 against what a working lab actually needs</p>
+      <div id="ch-budget"></div>
+      <p class="chart-note" id="budget-note"></p>
+    </div>
+
+    <div class="grid c2">
+      <div class="card">
+        <h2>Inside the $5,000</h2>
+        <p class="sub">Landed price of every item that fits your chain</p>
+        <div id="ch-budget-in" class="barlist"></div>
+        <h3 style="margin:18px 0 6px;font-size:13px;color:var(--navy-d)">Menus this kit can run</h3>
+        <div id="budget-tests" class="testgrid"></div>
+        <p class="chart-note" id="budget-tests-note"></p>
+      </div>
+      <div class="card">
+        <h2>Left outside the $5,000</h2>
+        <p class="sub">What the budget cannot reach</p>
+        <div id="ch-budget-out" class="barlist"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Budget ladder — what each extra dollar unlocks</h2>
+      <p class="sub">Same chain and same catalogue; only the money changes</p>
+      <div id="ch-ladder" class="chart tall"></div>
+      <div id="ladder-cards" class="stack-cards"></div>
+      <p class="chart-note" id="ladder-note"></p>
+    </div>
+
+    <div class="card">
+      <h2>The $5,000 lab vs the full lab, on the same model</h2>
+      <p class="sub">Same prices, same demand, same costs — only the machines change</p>
+      <div id="ch-two" class="chart tall"></div>
+      <div id="two-cards" class="kpis" style="margin-top:12px"></div>
+      <p class="chart-note" id="two-note"></p>
+    </div>
+
+    <div class="card">
+      <h2>Move the budget and see the kit change</h2>
+      <div class="field" style="max-width:560px">
+        <label for="budget-slider">Capital for equipment (landed, USD)</label>
+        <input type="range" id="budget-slider" min="3000" max="30000" step="500" value="5000">
+      </div>
+      <div class="budget-slider-row">
+        <span id="budget-value" class="budget-big">$5,000</span>
+        <span class="chart-note" id="budget-slider-note"></span>
+      </div>
+      <div id="budget-tiles" class="dev-grid"></div>
     </div>
   </section>
 

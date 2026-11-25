@@ -131,6 +131,7 @@
       var base = defaultsState();
       var merged = mergeDeep(base, got);
       if (!merged.dist || typeof merged.dist !== "object") merged.dist = Object.assign({}, M.DIST);
+      if (typeof merged.budget === "number") BUDGET_CHOICE = merged.budget;
       if (merged.A.reagent_fx_beta === undefined) merged.A.reagent_fx_beta = M.A.reagent_fx_beta;
       return merged;
     } catch (e) { return defaultsState(); }
@@ -203,7 +204,41 @@
   }
 
   /* ------------------------------------------------------------------- KPIs */
+  function renderBudgetStrip() {
+    var b = budgetData(BUDGET_CHOICE);
+    var D = window.LabDevices || {};
+    var have = {}, labels = D.test_labels || {};
+    (b.got || []).forEach(function (g) {
+      var d = (D.devices || []).filter(function (x) { return x.key === g.key; })[0];
+      if (d && d.tests) d.tests.forEach(function (t) { have[t] = true; });
+    });
+    var menuKeys = (results.st.menu || []).map(function (x) { return x.key; });
+    var covered = menuKeys.filter(function (k) { return have[k]; }).length;
+    var out = (b.skipped || []).reduce(function (a, x) { return a + x.landed; }, 0);
+    var cards = [
+      { k: "Your equipment budget", v: usd(b.budget), s: "landed at Port Sudan", c: "" },
+      { k: "What fits", v: usd(b.spent), s: (b.got || []).length + " items", c: "good" },
+      { k: "Gap to a working lab", v: usd(out), s: (b.skipped || []).length + " items missing", c: "bad" },
+      { k: "Menu you can sell", v: Math.round(covered / (menuKeys.length || 1) * 100) + "%",
+        s: covered + " of " + menuKeys.length + " test lines",
+        c: covered / (menuKeys.length || 1) >= .8 ? "good" : "warn" },
+      { k: "Analyzers", v: (b.got || []).filter(function (g) {
+          return ["cbc_biobase", "chem_biobase", "cbc_mindray_bc10", "chem_rayto"].indexOf(g.key) >= 0;
+        }).length + "", s: "CBC + chemistry", c: "good" },
+      { k: "Must-haves cut", v: (b.skipped || []).filter(function (g) {
+          return ["fridge", "generator", "water", "ups"].indexOf(g.key) >= 0;
+        }).length + "", s: "fridge / power / water", c: "bad" }
+    ];
+    var host = $("#kpis");
+    if (!host) return;
+    host.innerHTML = cards.map(function (c) {
+      return '<div class="kpi ' + c.c + '"><span class="k">' + esc(c.k) + "</span>" +
+        '<span class="v">' + esc(c.v) + '</span><span class="d">' + esc(c.s) + "</span></div>";
+    }).join("");
+  }
+
   function renderKpis() {
+    if (currentTab() === "budget") { renderBudgetStrip(); return; }
     var m = results.m;
     var isBlank = results.st.capex_p1.every(function (c) { return !c.unit; })
                && results.st.menu.every(function (t) { return !t.price_usd; });
@@ -983,7 +1018,34 @@
       esc(top[0].label) + "</p>";
   }
 
+  /* the money tab's own strip: four numbers, colour-coded, no prose */
+  function renderOutlookKpis() {
+    var host = $("#outlook-kpis");
+    if (!host) return;
+    var m = results.m;
+    var cards = [
+      { k: "Money back in", v: m.payback_months === null ? "never" : nf(m.payback_months, 1) + " mo",
+        s: "cumulative cash turns positive", c: m.payback_months && m.payback_months <= 24 ? "good" : "warn" },
+      { k: "Worth today (NPV)", v: usd(m.npv22), s: "36 months at 22%", c: m.npv22 > 0 ? "good" : "bad" },
+      { k: "Month-12 profit", v: usd(m.m12_ebitda), s: pct(m.m12_margin, 0) + " of revenue",
+        c: m.m12_margin >= 30 ? "good" : "warn" },
+      { k: "Cash to start", v: usd(m.funding_need), s: "lowest point, month " + m.trough_month,
+        c: "warn" },
+      { k: "First-year bottom line", v: usd(m.yr1_ebitda), s: "EBITDA, 12 months",
+        c: m.yr1_ebitda > 0 ? "good" : "bad" },
+      { k: "If volume is 30% lower", v: (results.scen && results.scen[0].m.npv22 < 0 ? "−" : "") +
+          usd(Math.abs(results.scen ? results.scen[0].m.npv22 : m.npv22)).replace("$", "") + "$",
+        s: "NPV in the conservative case",
+        c: (results.scen && results.scen[0].m.npv22 > 0) ? "warn" : "bad" }
+    ];
+    host.innerHTML = cards.map(function (c) {
+      return '<div class="kpi ' + c.c + '"><span class="k">' + esc(c.k) + "</span>" +
+        '<span class="v">' + esc(c.v) + '</span><span class="d">' + esc(c.s) + "</span></div>";
+    }).join("");
+  }
+
   function drawAll() {
+    renderOutlookKpis();
     try {
       drawCashflow();
       drawCapexSplit();
@@ -1009,7 +1071,7 @@
     var PERF = window.__perf;
     var t0 = PERF ? performance.now() : 0;
     raf = requestAnimationFrame(function () {
-      compute(currentTab() === "overview");
+      compute(currentTab() === "outlook" || currentTab() === "overview");
       var t1 = PERF ? performance.now() : 0;
       renderKpis();
       var t2 = PERF ? performance.now() : 0;
@@ -1031,7 +1093,7 @@
       }
       clearTimeout(chartTimer);
       chartTimer = setTimeout(function () {
-        if (currentTab() !== "overview") return;
+        if (currentTab() !== "outlook" && currentTab() !== "overview") return;
         if (!results.scen) compute(true);
         drawAll();
       }, 140);
@@ -1340,7 +1402,7 @@
   /* -------------------------------------------------------------------- tabs */
   function currentTab() {
     var b = $("#tabs button[aria-selected='true']");
-    return b ? b.getAttribute("data-tab") : "overview";
+    return b ? b.getAttribute("data-tab") : "budget";
   }
   function selectTab(name) {
     $$("#tabs button").forEach(function (x) {
@@ -1359,6 +1421,8 @@
       p.hidden = p.getAttribute("data-panel") !== name;
     });
     if (name === "tests") renderMenu();
+    if (name === "budget") setTimeout(function () { drawBudget(); renderKpis(); }, 20);
+    else if (name === "outlook" || name === "overview") setTimeout(renderKpis, 20);
     if (name === "capex") { renderDevices(); renderCapex(); }
     if (name === "opex") renderOpex();
     if (name === "monthly") renderMonthly();
@@ -1377,7 +1441,7 @@
       renderReport();
       if (!mc && !mcBusy) runMonteCarlo(true);
     }
-    if (name === "overview") {
+    if (name === "outlook" || name === "overview") {
       setTimeout(function () {
         if (!results.scen) compute(true);
         drawAll();
@@ -1522,6 +1586,336 @@
     });
   }
 
+
+
+  /* ================================================================= BUDGET
+   * The owner's constraint is $5,000. This tab answers it visually: what fits,
+   * what does not, and what each extra dollar unlocks. All data comes from
+   * window.LabDevices.budget / .budget_ladder (generated from
+   * device_catalogue.build_for_budget on the owner's landed chain).
+   * ==================================================================== */
+  var BUDGET_CHOICE = 5000;
+
+  function fmtK(v) {
+    var a = Math.abs(v);
+    if (a >= 1000) return "$" + (v / 1000).toFixed(a % 1000 === 0 ? 0 : 1) + "k";
+    return usd(v);
+  }
+
+  function budgetData(choice) {
+    var D = window.LabDevices || {};
+    var budget = choice || BUDGET_CHOICE;
+    if (budget === 5000 && D.budget) return D.budget;
+    // recompute locally for any other budget, using the shipped device table
+    var PRIORITY = ["cbc_biobase", "chem_biobase", "centrifuge", "microscope",
+                    "fridge", "ups", "avr", "generator", "water", "pipettes", "balance",
+                    "water_bath", "esr_auto", "urine", "pc", "autoclave", "biosafety",
+                    "incubator", "electrolyte", "coag", "elisa", "hba1c", "furniture"];
+    var DELIVERED = { ups: 1, avr: 1, generator: 1, pc: 1, biosafety: 1, furniture: 1 };
+    var byKey = {};
+    (D.devices || []).forEach(function (d) { byKey[d.key] = d; });
+    var got = [], skipped = [], spent = 0, first = true;
+    PRIORITY.forEach(function (k) {
+      var d = byKey[k];
+      if (!d) return;
+      var exw = d.price_usd * (d.qty || 1), landed;
+      if (DELIVERED[k]) landed = exw;
+      else {
+        var scale = Math.sqrt(exw / 2765);
+        var mi = first ? 414 : 0;
+        landed = exw + 200 * scale + 100 * scale + mi + Math.round(exw * 0.07) +
+                 Math.round(exw * 0.10);
+      }
+      if (spent + landed <= budget + 0.005) {
+        spent += landed;
+        got.push({ key: k, name: d.name, model: d.model, exw: exw, landed: landed,
+                   cls: d.cls, img: d.img });
+        first = false;
+      } else {
+        skipped.push({ key: k, name: d.name, landed: landed });
+      }
+    });
+    return { budget: budget, spent: spent, got: got, skipped: skipped,
+             left: budget - spent };
+  }
+
+  function renderBudgetKpis(b) {
+    var host = $("#budget-kpis");
+    if (!host) return;
+    var need = 0;
+    (b.got || []).forEach(function (g) { need += g.landed; });
+    (b.skipped || []).forEach(function (g) { need += g.landed; });
+    var essentialsOut = (b.skipped || []).filter(function (g) {
+      return ["fridge", "generator", "water", "ups"].indexOf(g.key) >= 0;
+    });
+    var D0 = window.LabDevices || {};
+    var have = {};
+    (b.got || []).forEach(function (g) {
+      var d = (D0.devices || []).filter(function (x) { return x.key === g.key; })[0];
+      if (d && d.tests) d.tests.forEach(function (t) { have[t] = true; });
+    });
+    var menuKeys = (results && results.st && results.st.menu)
+      ? results.st.menu.map(function (m) { return m.key; })
+      : Object.keys(D0.test_labels || {});
+    var menuTotal = menuKeys.length || 1;
+    var menuCovered = menuKeys.filter(function (k) { return have[k]; }).length;
+    var menuCoverage = Math.round(menuCovered / menuTotal * 100);
+    var analyserIn = (b.got || []).filter(function (g) {
+      return ["cbc_biobase", "chem_biobase", "cbc_mindray_bc10"].indexOf(g.key) >= 0;
+    }).length;
+    var cards = [
+      { k: "Budget", v: usd(b.budget), s: "your capital for equipment", c: "" },
+      { k: "Fits", v: (b.got || []).length + " items", s: fmtK(b.spent) + " landed", c: "good" },
+      { k: "Left", v: fmtK(Math.max(0, b.left)), s: "unspent", c: "" },
+      { k: "Analyzers inside", v: analyserIn + " of 2",
+        s: analyserIn >= 2 ? "CBC + chemistry" : "one analyzer only",
+        c: analyserIn >= 2 ? "good" : "bad" },
+      { k: "Still outside", v: fmtK((b.skipped || []).reduce(function (a, x) {
+        return a + x.landed;
+      }, 0)), s: (b.skipped || []).length + " items the budget cannot reach", c: "bad" },
+      { k: "Must-haves cut", v: essentialsOut.length + "",
+        s: essentialsOut.length ? "fridge / power — the lab cannot run" : "none — safe",
+        c: essentialsOut.length ? "bad" : "good" },
+      { k: "Menu coverage", v: menuCoverage + "%",
+        s: menuCovered + " of " + menuTotal + " test lines",
+        c: menuCoverage >= 80 ? "good" : menuCoverage >= 50 ? "warn" : "bad" }
+    ];
+    host.innerHTML = cards.map(function (c) {
+      return '<div class="kpi ' + c.c + '"><span class="k">' + esc(c.k) + "</span>" +
+        '<span class="v">' + esc(c.v) + "</span><span class=\"d\">" + esc(c.s) + "</span></div>";
+    }).join("");
+  }
+
+  /* a two-bar comparison: what fits vs what is needed */
+  function drawBudgetCompare(b) {
+    var host = $("#ch-budget");
+    if (!host) return;
+    var need = (b.got || []).reduce(function (a, g) { return a + g.landed; }, 0) +
+               (b.skipped || []).reduce(function (a, g) { return a + g.landed; }, 0);
+    var rows = [
+      ["Your budget", b.budget, "#9aa6b2"],
+      ["What fits now", b.spent, "#12507a"],
+      ["Full working lab", need, "#a3261f"]
+    ];
+    var max = Math.max(need, b.budget);
+    host.innerHTML = rows.map(function (r) {
+      var pct = max ? (r[1] / max * 100) : 0;
+      return '<div class="barrow">' +
+        '<div class="barrow-h"><span>' + esc(r[0]) + "</span><b>" + usd(r[1]) + "</b></div>" +
+        '<div class="barrow-track"><span style="width:' + pct.toFixed(1) +
+          "%;background:" + r[2] + '"></span></div></div>';
+    }).join("") +
+      '<p class="chart-note" style="margin-top:10px">' + (need > b.budget
+        ? "The gap is " + usd(need - b.budget) + " — that is what separates a " +
+          "two-machine setup from a lab that can open for the routine menu."
+        : "Your budget covers the working lab at these prices.") + "</p>";
+  }
+
+  /* horizontal bars for the items inside / outside the budget */
+  function drawBudgetBars(hostSel, items, colour, emptyMsg) {
+    var host = $(hostSel);
+    if (!host) return;
+    var list = (items || []).slice().sort(function (a, c) { return c.landed - a.landed; });
+    if (!list.length) { host.innerHTML = '<p class="empty">' + esc(emptyMsg) + "</p>"; return; }
+    var max = list[0].landed || 1;
+    host.innerHTML = list.map(function (g) {
+      return '<div class="hrow">' +
+        '<div class="hrow-h"><span>' + esc(g.name) + "</span>" +
+          "<b>" + usd(g.landed) + "</b></div>" +
+        '<div class="hrow-track"><span style="width:' + (g.landed / max * 100).toFixed(1) +
+          "%;background:" + colour + '"></span></div></div>';
+    }).join("");
+  }
+
+  function drawBudgetLadder() {
+    var host = $("#ch-ladder");
+    var D = window.LabDevices || {};
+    var ladder = D.budget_ladder || [];
+    if (!host || !ladder.length) return;
+    var W = host.clientWidth || 520, H = host.clientHeight || 300;
+    host.innerHTML = "";
+    var svg = svgEl("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", height: H,
+                             preserveAspectRatio: "none", role: "img" });
+    host.appendChild(svg);
+    var pad = { l: 46, r: 14, t: 16, b: 40 };
+    var maxY = Math.max.apply(null, ladder.map(function (r) { return r.spent; }));
+    var step = niceStep(maxY || 1, 4);
+    maxY = Math.ceil(maxY / step) * step;
+    var bw = (W - pad.l - pad.r) / ladder.length;
+    var Y = function (v) { return pad.t + (H - pad.t - pad.b) * (1 - v / (maxY || 1)); };
+    for (var v = 0; v <= maxY + 1e-6; v += step) {
+      svg.appendChild(svgEl("line", { x1: pad.l, x2: W - pad.r, y1: Y(v), y2: Y(v),
+        stroke: "#e6ecf2", "stroke-width": 1 }));
+      svgText(svg, kFmt(v), pad.l - 6, Y(v) + 4, { anchor: "end", size: 9.5 });
+    }
+    ladder.forEach(function (r, i) {
+      var x = pad.l + bw * i + bw * 0.18;
+      var w = bw * 0.64;
+      var h = H - pad.t - pad.b - (Y(r.spent) - pad.t);
+      svg.appendChild(svgEl("rect", { x: x, y: Y(r.spent), width: w,
+        height: Math.max(0, Y(0) - Y(r.spent)), rx: 3,
+        fill: r.budget === 5000 ? "#12507a" : "#7ba7c4" }));
+      var barTop = Y(r.spent);
+      var barH = Math.max(0, Y(0) - barTop);
+      if (barH > 18) {
+        svgText(svg, String(r.got.length), x + w / 2, barTop + barH / 2 + 4,
+                { anchor: "middle", size: 11, fill: "#fff", weight: 700 });
+      } else {
+        svgText(svg, String(r.got.length), x + w / 2, barTop - 5,
+                { anchor: "middle", size: 9, fill: "#4a5866" });
+      }
+      svgText(svg, fmtK(r.budget), x + w / 2, H - pad.b + 15,
+              { anchor: "middle", size: 9 });
+    });
+    svgText(svg, "equipment landed (USD)", 2, 12, { anchor: "start", size: 9 });
+    svgText(svg, "number inside a bar = items you can buy", pad.l + 6, H - 4,
+            { anchor: "start", size: 8.5, fill: "#9aa6b2" });
+    var host2 = $("#ladder-cards");
+    if (host2) {
+      host2.innerHTML = ladder.map(function (r) {
+        return '<div class="tcard"><div class="tcard-h"><span>' + fmtK(r.budget) +
+          "</span><span class='pill " + (r.budget === 5000 ? "a" : "g") + "'>" +
+          r.got.length + " items</span></div>" +
+          '<div class="tcard-f"><span>' + fmtK(r.spent) + " spent</span>" +
+          "<span>" + fmtK(r.left) + " left</span></div></div>";
+      }).join("");
+    }
+    var note = $("#ladder-note");
+    if (note) {
+      var five = ladder[0], twenty = ladder[4] || ladder[ladder.length - 1];
+      note.textContent = "At $5,000 you get " + five.got.length + " items; at " +
+        fmtK(twenty.budget) + " you get " + twenty.got.length +
+        ". The jump between them is not gold-plating — it is the fridge, the generator, " +
+        "the water still and the analysers that make the routine menu possible.";
+    }
+  }
+
+  function renderBudgetTiles(b) {
+    var host = $("#budget-tiles");
+    if (!host) return;
+    var inKeys = {};
+    (b.got || []).forEach(function (g) { inKeys[g.key] = g; });
+    var outKeys = {};
+    (b.skipped || []).forEach(function (g) { outKeys[g.key] = g; });
+    var tiles = (b.got || []).map(function (g) {
+      return { name: g.name, landed: g.landed, key: g.key, inside: true,
+               img: (g.img || "") };
+    }).concat((b.skipped || []).map(function (g) {
+      return { name: g.name, landed: g.landed, key: g.key, inside: false, img: "" };
+    }));
+    tiles.sort(function (a, c) { return c.landed - a.landed; });
+    host.innerHTML = tiles.map(function (t) {
+      var d = (window.LabDevices.devices || []).filter(function (x) { return x.key === t.key; })[0] || {};
+      return '<article class="devcard ' + (t.inside ? "in" : "out") + '">' +
+        '<div class="devpic">' + (d.img
+          ? '<img src="assets/' + esc(d.img) + '" alt="' + esc(t.name) + '" loading="lazy">'
+          : '<span class="devpic-ph">' + (t.inside ? "✓" : "✕") + "</span>") + "</div>" +
+        '<div class="devbody"><h3>' + esc(t.name) + "</h3>" +
+          '<p class="devmodel">' + esc(d.model || "") + "</p>" +
+          '<div class="devmoney"><b>' + usd(t.landed) + "</b><span>landed</span></div>" +
+          '<div class="devtags"><span class="pill ' + (t.inside ? "g" : "r") + '">' +
+            (t.inside ? "fits" : "does not fit") + "</span></div>" +
+        "</div></article>";
+    }).join("");
+    var note = $("#budget-slider-note");
+    if (note) {
+      note.textContent = "With " + usd(b.budget) + ": " + (b.got || []).length +
+        " items, " + usd(b.spent) + " spent, " + usd(b.left) + " left. " +
+        ((b.got || []).length < 10 ? "This is not yet a lab that can open for the routine menu."
+         : "This kit can open and run the routine menu.");
+    }
+    var big = $("#budget-value");
+    if (big) big.textContent = usd(b.budget);
+  }
+
+  /* which menu tests the kit can actually run — the honest "can I open?" answer */
+  function drawBudgetTests(b) {
+    var host = $("#budget-tests");
+    if (!host) return;
+    var D = window.LabDevices || {};
+    var labels = D.test_labels || {};
+    var have = {};
+    (b.got || []).forEach(function (g) {
+      var d = (D.devices || []).filter(function (x) { return x.key === g.key; })[0];
+      if (d && d.tests) d.tests.forEach(function (t) { have[t] = true; });
+    });
+    var menuKeys = Object.keys((results && results.st && results.st.menu)
+      ? results.st.menu.reduce(function (a, m) { a[m.key] = 1; return a; }, {})
+      : {});
+    if (!menuKeys.length) menuKeys = Object.keys(labels);
+    host.innerHTML = menuKeys.map(function (k) {
+      var on = !!have[k];
+      return '<span class="testchip ' + (on ? "on" : "off") + '">' +
+        (on ? "✓ " : "✕ ") + esc(labels[k] || k) + "</span>";
+    }).join("");
+    var note = $("#budget-tests-note");
+    if (note) {
+      var total = menuKeys.length, covered = menuKeys.filter(function (k) { return have[k]; }).length;
+      note.textContent = covered + " of " + total +
+        " menu lines can be run with this kit. The rest need the machines on the right.";
+    }
+  }
+
+  /* $5k-only vs full kit: four paired bars, because the trade-off is the story */
+  function drawTwoFutures() {
+    var host = $("#ch-two");
+    var D = window.LabDevices || {};
+    var sc = D.budget_scenarios || [];
+    if (!host || sc.length < 2) return;
+    var a = sc[0], b = sc[1];
+    var METRICS = [
+      ["Cash needed to open", a.fund, b.fund, "$"],
+      ["Payback (months)", a.payback, b.payback, "mo"],
+      ["NPV over 36 months", a.npv, b.npv, "$"],
+      ["Test lines you can sell", (a.tests || []).length,
+       (b.tests && b.tests.length) ? b.tests.length : (results.st.menu || []).length, "n"]
+    ];
+    host.innerHTML = METRICS.map(function (m) {
+      var max = Math.max(m[1] || 0, m[2] || 0) || 1;
+      var f = function (v) { return m[3] === "$" ? usd(v) : nf(v, 1) + (m[3] === "mo" ? " mo" : ""); };
+      return '<div class="pairrow">' +
+        '<div class="pairrow-h"><span>' + esc(m[0]) + "</span></div>" +
+        '<div class="pairrow-b">' +
+          '<div class="pbar"><span style="width:' + ((m[1] || 0) / max * 100).toFixed(1) +
+            '%"></span><b>' + f(m[1]) + "</b></div>" +
+          '<div class="pbar full"><span style="width:' + ((m[2] || 0) / max * 100).toFixed(1) +
+            '%"></span><b>' + f(m[2]) + "</b></div>" +
+        "</div></div>";
+    }).join("") +
+      '<div class="legend" style="margin-top:10px">' +
+      '<span><i style="background:#12507a"></i>What $5,000 buys</span>' +
+      '<span><i style="background:#7ba7c4"></i>Full opening kit</span></div>';
+    var cards = $("#two-cards");
+    if (cards) {
+      cards.innerHTML = [
+        ["$5k: cash to open", usd(a.fund), "smaller, but fewer tests"],
+        ["$5k: payback", nf(a.payback, 1) + " mo", "faster on less capital"],
+        ["$5k: NPV", usd(a.npv), "on the menu it can run"],
+        ["Full: test lines", nf((b.tests && b.tests.length) || (results.st.menu || []).length, 0),
+         "the whole routine menu"]
+      ].map(function (c) {
+        return '<div class="kpi"><span class="k">' + esc(c[0]) + "</span>" +
+          '<span class="v">' + esc(c[1]) + "</span><span class=\"d\">" + esc(c[2]) + "</span></div>";
+      }).join("");
+    }
+    var note = $("#two-note");
+    if (note) note.textContent = "The $5,000 kit is cheaper and pays back faster, but it can sell " +
+      "only " + (a.tests || []).length + " of the " + ((b.tests || []).length || 16) +
+      " menu lines, and it has no reagent fridge, generator or water still — " +
+      "so the study treats those as a separate, unavoidable bill.";
+  }
+
+  function drawBudget() {
+    var b = budgetData(BUDGET_CHOICE);
+    renderBudgetKpis(b);
+    drawBudgetTests(b);
+    drawTwoFutures();
+    drawBudgetCompare(b);
+    drawBudgetBars("#ch-budget-in", b.got, "#12507a", "Nothing fits this budget.");
+    drawBudgetBars("#ch-budget-out", b.skipped, "#a3261f", "Everything fits.");
+    drawBudgetLadder();
+    renderBudgetTiles(b);
+  }
 
   /* ============================================================== DEVICES
    * The equipment tab. Every device comes from window.LabDevices, which is
@@ -1750,6 +2144,20 @@
       var el = document.getElementById(id);
       if (el) el.addEventListener("change", renderDevices);
     });
+    var slider = $("#budget-slider");
+    if (slider) {
+      slider.value = String(BUDGET_CHOICE);
+      var applyBudget = function () {
+        BUDGET_CHOICE = Number(slider.value);
+        drawBudget();
+      };
+      slider.addEventListener("input", applyBudget);
+      slider.addEventListener("change", function () {
+        applyBudget();
+        state.budget = BUDGET_CHOICE;
+        save();
+      });
+    }
   }
 
   /* ------------------------------------------------------------------ study
@@ -2011,6 +2419,28 @@
 
       /* 1 ------------------------------------------------------------- */
       "<h2 id='rpt-s1'>1. Executive summary</h2>" +
+      (function () {
+        var b = budgetData(BUDGET_CHOICE);
+        var need = (b.got || []).reduce(function (a, g) { return a + g.landed; }, 0) +
+                   (b.skipped || []).reduce(function (a, g) { return a + g.landed; }, 0);
+        var max = Math.max(need, b.budget) || 1;
+        var bar = function (label, v, col) {
+          return "<div class='barrow'><div class='barrow-h'><span>" + esc(label) +
+            "</span><b>" + usd(v) + "</b></div><div class='barrow-track'>" +
+            "<span style='width:" + (v / max * 100).toFixed(1) + "%;background:" + col +
+            "'></span></div></div>";
+        };
+        return "<section class='rpt-kpis'>" + [
+          ["Your budget", usd(b.budget)], ["What fits", usd(b.spent)],
+          ["Gap to a working lab", usd(need - b.budget)],
+          ["Items", (b.got || []).length + " in / " + (b.skipped || []).length + " out"]
+        ].map(function (k) {
+          return "<div class='rk'><span>" + esc(k[0]) + "</span><b>" + esc(k[1]) + "</b></div>";
+        }).join("") + "</section>" +
+          bar("Your $5,000", b.budget, "#9aa6b2") +
+          bar("What it buys now", b.spent, "#12507a") +
+          bar("A lab that can open", need, "#a3261f");
+      })() +
       "<p id='rpt-summary'>" + esc(val("notes",
         "A " + (plan.area ? plan.area + " m² " : "") + "medical laboratory in " +
         val("location", "the target location") + " opening with a 3-part haematology analyser and " +
@@ -2052,6 +2482,44 @@
           usd(st.capex_p2.reduce(function (a, c) { return a + c.qty * c.unit; }, 0)) : "0") +
         ") and Phase 3 in month " + nf(p.phase3_month) + ". Total across all three phases: " +
         usd(m.capex_total) + ".</p>" +
+
+      /* 3b. the budget, visually -------------------------------------- */
+      (function () {
+        var b = budgetData(BUDGET_CHOICE);
+        var D = window.LabDevices || {};
+        var labels = D.test_labels || {};
+        var have = {};
+        (b.got || []).forEach(function (g) {
+          var d = (D.devices || []).filter(function (x) { return x.key === g.key; })[0];
+          if (d && d.tests) d.tests.forEach(function (t) { have[t] = true; });
+        });
+        var menuKeys = (st.menu || []).map(function (m) { return m.key; });
+        var need = (b.got || []).reduce(function (a, g) { return a + g.landed; }, 0) +
+                   (b.skipped || []).reduce(function (a, g) { return a + g.landed; }, 0);
+        var max = Math.max(need, b.budget);
+        var bar = function (label, v, col) {
+          return '<div class="barrow"><div class="barrow-h"><span>' + esc(label) +
+            "</span><b>" + usd(v) + '</b></div><div class="barrow-track">' +
+            '<span style="width:' + (v / max * 100).toFixed(1) + "%;background:" + col +
+            '"></span></div></div>';
+        };
+        return "<h2 id='rpt-s3b'>3b. What your $5,000 actually buys</h2>" +
+          "<p>Measured against your own landed chain, not against a list price.</p>" +
+          bar("Your equipment budget", b.budget, "#9aa6b2") +
+          bar("What fits in it now", b.spent, "#12507a") +
+          bar("A lab that can open for the routine menu", need, "#a3261f") +
+          "<p>" + (need > b.budget ? "Short by <b>" + usd(need - b.budget) +
+            "</b>. " : "") + (b.got || []).length + " items fit; " +
+            (b.skipped || []).length + " do not.</p>" +
+          "<div class='testgrid'>" + menuKeys.map(function (k) {
+            return "<span class='testchip " + (have[k] ? "on" : "off") + "'>" +
+              (have[k] ? "&#10003; " : "&#215; ") + esc(labels[k] || k) + "</span>";
+          }).join("") + "</div>" +
+          "<p class='chart-note'>" +
+            menuKeys.filter(function (k) { return have[k]; }).length + " of " +
+            menuKeys.length + " menu lines can run with this kit. " +
+            "The machines on the right-hand side of the Budget tab are what close the gap.</p>";
+      })() +
 
       /* 4 ------------------------------------------------------------- */
       "<h2 id='rpt-s4'>4. Test menu and unit economics</h2>" +
@@ -2357,7 +2825,7 @@
   window.addEventListener("resize", function () {
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(function () {
-      if (currentTab() === "overview") drawAll();
+      if (currentTab() === "outlook" || currentTab() === "overview") drawAll();
       if (currentTab() === "quant" && mc) drawFxChart();
     }, 180);
   });
@@ -2373,9 +2841,9 @@
     wirePlanInputs();
     // The study is the deliverable, so it opens first; the dashboard tabs are
     // one click away and every number in the study comes from them.
-    selectTab(/overview|tests|capex|opex|assumptions|monthly|quant/.test(location.hash)
+    selectTab(/outlook|overview|tests|budget|capex|opex|assumptions|monthly|quant/.test(location.hash)
       ? location.hash.replace("#", "")
-      : "plan");
+      : "budget");
     syncAssumptionInputs();
     syncPlanInputs();
     renderReport();
@@ -2394,7 +2862,7 @@
 
   window.addEventListener("hashchange", function () {
     var name = (location.hash || "").replace("#", "");
-    if (/^(overview|tests|capex|opex|assumptions|monthly|quant|plan)$/.test(name)) {
+    if (/^(outlook|overview|budget|tests|capex|opex|assumptions|monthly|quant|plan)$/.test(name)) {
       selectTab(name);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }

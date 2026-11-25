@@ -144,6 +144,12 @@ a:hover { text-decoration: underline; }
 }
 @media (min-width: 760px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1060px) { .kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+/* strips with 7 cards (the budget tab) get their own even split */
+#budget-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 620px) { #budget-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1060px) { #budget-kpis { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+#budget-kpis .kpi .v { font-size: 18px; }
+#budget-kpis .kpi .k { font-size: 10.5px; }
 
 .kpi {
   background: var(--card);
@@ -1180,15 +1186,20 @@ html[dir="ltr"] .tcard-f { flex-direction: row; }
 .devcard.in { border-color: var(--navy); box-shadow: 0 0 0 1px var(--navy) inset; }
 .devpic {
   height: 150px;
+  overflow: hidden;
   display: grid;
   place-items: center;
   background: linear-gradient(180deg, #fbfcfe, #f2f5f9);
   border-bottom: 1px solid var(--line-2);
   padding: 10px;
 }
+/* percentage heights do not resolve inside a centred grid item, so the photo
+   must be bounded in px: 150px cell - 2x10px padding = 130px */
 .devpic img {
   max-width: 100%;
-  max-height: 100%;
+  max-height: 130px;
+  width: auto;
+  height: auto;
   object-fit: contain;
   filter: contrast(1.03);
 }
@@ -1244,7 +1255,119 @@ html[dir="ltr"] .tcard-f { flex-direction: row; }
 .dev-altbtn.open { border-inline-start: 3px solid var(--green); }
 @media (max-width: 640px) {
   .dev-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
-  .devpic { height: 110px; }
+  .devpic { height: 110px; overflow: hidden; }
+  .devpic img { max-height: 90px; }
   .devbody { padding: 10px; }
   .devmoney b { font-size: 15px; }
 }
+
+/* ==========================================================================
+   Budget tab — visual only: bars, tiles, ladder
+   ========================================================================== */
+.barrow { margin: 0 0 14px; }
+.barrow-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.barrow-h span { color: var(--ink-2); font-weight: 600; }
+.barrow-h b { font-size: 16px; font-variant-numeric: tabular-nums; }
+.barrow-track {
+  height: 18px;
+  background: #f2f5f8;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.barrow-track > span { display: block; height: 100%; border-radius: 6px; }
+
+.hrow { margin: 0 0 10px; }
+.hrow-h {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  margin-bottom: 3px;
+  color: var(--ink-2);
+}
+.hrow-h b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.hrow-track {
+  height: 12px;
+  background: #f2f5f8;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.hrow-track > span { display: block; height: 100%; border-radius: 4px; }
+
+.budget-slider-row {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin: 6px 0 16px;
+  flex-wrap: wrap;
+}
+.budget-big {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.5px;
+}
+input[type="range"] { width: 100%; accent-color: var(--navy); margin-top: 6px; }
+
+/* out-of-budget tiles read as "not yet" */
+.devcard.out { opacity: .82; border-color: #e6c9c6; }
+.devcard.out .devpic { background: linear-gradient(180deg,#fdf6f5,#faecea); }
+.devcard.out .devbody h3 { color: #8a1f19; }
+.devcard.in .devpic { background: linear-gradient(180deg,#f6fcf9,#eaf5ef); }
+
+/* bar lists size to their content; a fixed height made them paint over the
+   next card when the list was long */
+.barlist { display: block; }
+.barlist .hrow { margin: 0 0 9px; }
+
+/* which menus the bought kit can run */
+.testgrid { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 8px; }
+.testchip {
+  font-size: 12px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #f6f8fa;
+  color: var(--ink-3);
+  white-space: nowrap;
+}
+.testchip.on {
+  border-color: #bfe0cd;
+  background: #eaf6ef;
+  color: #14603c;
+  font-weight: 600;
+}
+.testchip.off { border-color: #ecd4d1; background: #fbf1f0; color: #9a4b45; }
+
+/* paired bars: $5k kit vs full kit */
+.pairrow { margin: 0 0 14px; }
+.pairrow-h { font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 5px; }
+.pairrow-b { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pbar {
+  position: relative;
+  height: 26px;
+  background: #f2f5f8;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.pbar > span { display: block; height: 100%; background: #12507a; opacity: .9; }
+.pbar.full > span { background: #7ba7c4; }
+.pbar > b {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  padding-inline-start: 8px;
+  font-size: 12.5px;
+  font-variant-numeric: tabular-nums;
+  color: #16212b;
+}
+@media (max-width: 640px) { .pairrow-b { grid-template-columns: 1fr; } }

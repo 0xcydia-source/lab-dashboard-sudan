@@ -292,6 +292,8 @@
   },
   {
    "key": "centrifuge",
+   "slot": "centrifuge",
+   "name_ar": "سنترفيوج 6 عين",
    "name": "Centrifuge 6–8 place",
    "model": "LC-H4KII",
    "brand": "—",
@@ -311,6 +313,8 @@
   },
   {
    "key": "microscope",
+   "slot": "microscope",
+   "name_ar": "ميكروسكوب ضوئي ثنائي العينية",
    "name": "Binocular LED microscope + 100× oil",
    "model": "BBM-3110B",
    "brand": "—",
@@ -658,6 +662,8 @@
   "lines": [
    {
     "key": "cbc",
+    "slot": "cbc",
+    "name_ar": "جهاز صورة دم كاملة CBC",
     "name": "CBC analyzer",
     "model": "BH-HA310",
     "brand": "Biobase",
@@ -674,6 +680,8 @@
    },
    {
     "key": "chem",
+    "slot": "chem",
+    "name_ar": "جهاز كيمياء نصف آلي",
     "name": "Chemistry analyzer",
     "model": "Biobase-Silver",
     "brand": "Biobase",
@@ -690,8 +698,8 @@
    {
     "key": "centrifuge",
     "slot": "centrifuge",
-    "name_ar": "سنترفيوج",
-    "name": "Centrifuge",
+    "name_ar": "سنترفيوج 6 عين",
+    "name": "Centrifuge 6–8 place",
     "model": "LC-H4KII",
     "brand": "—",
     "price": 110.22,
@@ -707,7 +715,7 @@
    {
     "key": "microscope",
     "slot": "microscope",
-    "name_ar": "ميكروسكوب ثنائي العينية",
+    "name_ar": "ميكروسكوب ضوئي ثنائي العينية",
     "name": "Microscope",
     "model": "BBM-3110B",
     "brand": "—",
@@ -931,6 +939,1961 @@
    "usd_intent": 2.8,
    "sdg_repriced": 33600.0,
    "factor": 4.8
+  }
+ ],
+ "budget": {
+  "budget": 5000.0,
+  "spent": 4916.3,
+  "left": 83.7,
+  "got": [
+   {
+    "key": "cbc_biobase",
+    "name": "3-part CBC analyzer",
+    "name_ar": "جهاز صورة دم كاملة 3-part",
+    "model": "BH-HA310",
+    "exw": 1835.86,
+    "landed": 2807.31,
+    "kind": "quote",
+    "open_system": false,
+    "cls": "analyzer"
+   },
+   {
+    "key": "chem_biobase",
+    "name": "Semi-auto chemistry analyzer",
+    "name_ar": "جهاز كيمياء نصف آلي",
+    "model": "Biobase-Silver",
+    "exw": 612.36,
+    "landed": 857.54,
+    "kind": "quote",
+    "open_system": true,
+    "cls": "analyzer"
+   },
+   {
+    "key": "centrifuge",
+    "name": "Centrifuge 6–8 place",
+    "name_ar": "سنترفيوج 6 عين",
+    "model": "LC-H4KII",
+    "exw": 110.22,
+    "landed": 189.12,
+    "kind": "quote",
+    "open_system": true,
+    "cls": "essential"
+   },
+   {
+    "key": "microscope",
+    "name": "Binocular LED microscope + 100× oil",
+    "name_ar": "ميكروسكوب ضوئي ثنائي العينية",
+    "model": "BBM-3110B",
+    "exw": 149.42,
+    "landed": 244.16,
+    "kind": "quote",
+    "open_system": true,
+    "cls": "essential"
+   },
+   {
+    "key": "ups",
+    "name": "Online UPS 3 kVA",
+    "name_ar": "UPS أونلاين 3kVA",
+    "model": "3 kVA online",
+    "exw": 430.0,
+    "landed": 430.0,
+    "kind": "sourced",
+    "open_system": true,
+    "cls": "power"
+   },
+   {
+    "key": "avr",
+    "name": "Voltage stabiliser 5 kVA",
+    "name_ar": "منظم جهد 5kVA",
+    "model": "VGMW 500 Plus",
+    "exw": 129.0,
+    "landed": 129.0,
+    "kind": "sourced",
+    "open_system": true,
+    "cls": "power"
+   },
+   {
+    "key": "pipettes",
+    "name": "Micropipettes ×3 + stand + tips",
+    "name_ar": "ماصات دقيقة ×3 + حامل + رؤوس",
+    "model": "2–20 / 20–200 / 100–1000 µL",
+    "exw": 160.0,
+    "landed": 259.17,
+    "kind": "sourced",
+    "open_system": true,
+    "cls": "essential"
+   }
+  ],
+  "skipped": [
+   {
+    "key": "fridge",
+    "name": "Reagent fridge 250–400 L, glass door",
+    "landed": 1249.05,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "generator",
+    "name": "Petrol generator 5 kVA",
+    "landed": 559.0,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "water",
+    "name": "Water distiller 4 L/h",
+    "landed": 1034.24,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "balance",
+    "name": "Analytical balance 0.001 g",
+    "landed": 217.05,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "water_bath",
+    "name": "Digital water bath",
+    "landed": 114.19,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "esr_auto",
+    "name": "ESR analyzer (automated)",
+    "landed": 712.57,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "urine",
+    "name": "Urine analyzer (dipstick reader)",
+    "landed": 371.75,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "pc",
+    "name": "PC + monitor + laser printer",
+    "landed": 1250.0,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "autoclave",
+    "name": "Autoclave 18–24 L",
+    "landed": 233.99,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "biosafety",
+    "name": "Biosafety / PPE starter kit",
+    "landed": 700.0,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "incubator",
+    "name": "Laboratory incubator 50 L",
+    "landed": 403.87,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "electrolyte",
+    "name": "Electrolyte analyzer Na/K/Cl",
+    "landed": 1133.17,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "coag",
+    "name": "Coagulation analyzer 2-channel",
+    "landed": 641.35,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "elisa",
+    "name": "ELISA reader + washer",
+    "landed": 2224.23,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "hba1c",
+    "name": "HbA1c analyzer",
+    "landed": 712.57,
+    "why": "does not fit the remaining budget"
+   },
+   {
+    "key": "furniture",
+    "name": "Furniture and fit-out",
+    "landed": 9000.0,
+    "why": "does not fit the remaining budget"
+   }
+  ],
+  "shortfall": 20557.03,
+  "multiplier": 1.4346,
+  "covered_tests": [
+   "cbc",
+   "chem",
+   "malaria",
+   "panel",
+   "semen",
+   "stool"
+  ]
+ },
+ "budget_ladder": [
+  {
+   "budget": 5000,
+   "spent": 4916.3,
+   "left": 83.7,
+   "got": [
+    {
+     "key": "cbc_biobase",
+     "name": "3-part CBC analyzer",
+     "name_ar": "جهاز صورة دم كاملة 3-part",
+     "model": "BH-HA310",
+     "exw": 1835.86,
+     "landed": 2807.31,
+     "kind": "quote",
+     "open_system": false,
+     "cls": "analyzer"
+    },
+    {
+     "key": "chem_biobase",
+     "name": "Semi-auto chemistry analyzer",
+     "name_ar": "جهاز كيمياء نصف آلي",
+     "model": "Biobase-Silver",
+     "exw": 612.36,
+     "landed": 857.54,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "centrifuge",
+     "name": "Centrifuge 6–8 place",
+     "name_ar": "سنترفيوج 6 عين",
+     "model": "LC-H4KII",
+     "exw": 110.22,
+     "landed": 189.12,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "microscope",
+     "name": "Binocular LED microscope + 100× oil",
+     "name_ar": "ميكروسكوب ضوئي ثنائي العينية",
+     "model": "BBM-3110B",
+     "exw": 149.42,
+     "landed": 244.16,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "ups",
+     "name": "Online UPS 3 kVA",
+     "name_ar": "UPS أونلاين 3kVA",
+     "model": "3 kVA online",
+     "exw": 430.0,
+     "landed": 430.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "avr",
+     "name": "Voltage stabiliser 5 kVA",
+     "name_ar": "منظم جهد 5kVA",
+     "model": "VGMW 500 Plus",
+     "exw": 129.0,
+     "landed": 129.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "pipettes",
+     "name": "Micropipettes ×3 + stand + tips",
+     "name_ar": "ماصات دقيقة ×3 + حامل + رؤوس",
+     "model": "2–20 / 20–200 / 100–1000 µL",
+     "exw": 160.0,
+     "landed": 259.17,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    }
+   ],
+   "skipped": [
+    {
+     "key": "fridge",
+     "name": "Reagent fridge 250–400 L, glass door",
+     "landed": 1249.05,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "generator",
+     "name": "Petrol generator 5 kVA",
+     "landed": 559.0,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "water",
+     "name": "Water distiller 4 L/h",
+     "landed": 1034.24,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "balance",
+     "name": "Analytical balance 0.001 g",
+     "landed": 217.05,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "water_bath",
+     "name": "Digital water bath",
+     "landed": 114.19,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "esr_auto",
+     "name": "ESR analyzer (automated)",
+     "landed": 712.57,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "urine",
+     "name": "Urine analyzer (dipstick reader)",
+     "landed": 371.75,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "pc",
+     "name": "PC + monitor + laser printer",
+     "landed": 1250.0,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "autoclave",
+     "name": "Autoclave 18–24 L",
+     "landed": 233.99,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "biosafety",
+     "name": "Biosafety / PPE starter kit",
+     "landed": 700.0,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "incubator",
+     "name": "Laboratory incubator 50 L",
+     "landed": 403.87,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "electrolyte",
+     "name": "Electrolyte analyzer Na/K/Cl",
+     "landed": 1133.17,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "coag",
+     "name": "Coagulation analyzer 2-channel",
+     "landed": 641.35,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "elisa",
+     "name": "ELISA reader + washer",
+     "landed": 2224.23,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "hba1c",
+     "name": "HbA1c analyzer",
+     "landed": 712.57,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "furniture",
+     "name": "Furniture and fit-out",
+     "landed": 9000.0,
+     "why": "does not fit the remaining budget"
+    }
+   ],
+   "shortfall": 20557.03,
+   "multiplier": 1.4346,
+   "covered_tests": [
+    "cbc",
+    "chem",
+    "malaria",
+    "panel",
+    "semen",
+    "stool"
+   ]
+  },
+  {
+   "budget": 7500,
+   "spent": 7499.42,
+   "left": 0.58,
+   "got": [
+    {
+     "key": "cbc_biobase",
+     "name": "3-part CBC analyzer",
+     "name_ar": "جهاز صورة دم كاملة 3-part",
+     "model": "BH-HA310",
+     "exw": 1835.86,
+     "landed": 2807.31,
+     "kind": "quote",
+     "open_system": false,
+     "cls": "analyzer"
+    },
+    {
+     "key": "chem_biobase",
+     "name": "Semi-auto chemistry analyzer",
+     "name_ar": "جهاز كيمياء نصف آلي",
+     "model": "Biobase-Silver",
+     "exw": 612.36,
+     "landed": 857.54,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "centrifuge",
+     "name": "Centrifuge 6–8 place",
+     "name_ar": "سنترفيوج 6 عين",
+     "model": "LC-H4KII",
+     "exw": 110.22,
+     "landed": 189.12,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "microscope",
+     "name": "Binocular LED microscope + 100× oil",
+     "name_ar": "ميكروسكوب ضوئي ثنائي العينية",
+     "model": "BBM-3110B",
+     "exw": 149.42,
+     "landed": 244.16,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "fridge",
+     "name": "Reagent fridge 250–400 L, glass door",
+     "name_ar": "ثلاجة كواشف بباب زجاجي",
+     "model": "HYC-400",
+     "exw": 920.0,
+     "landed": 1249.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "ups",
+     "name": "Online UPS 3 kVA",
+     "name_ar": "UPS أونلاين 3kVA",
+     "model": "3 kVA online",
+     "exw": 430.0,
+     "landed": 430.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "avr",
+     "name": "Voltage stabiliser 5 kVA",
+     "name_ar": "منظم جهد 5kVA",
+     "model": "VGMW 500 Plus",
+     "exw": 129.0,
+     "landed": 129.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "generator",
+     "name": "Petrol generator 5 kVA",
+     "name_ar": "مولد بنزين 5kVA",
+     "model": "ECO7990ES",
+     "exw": 559.0,
+     "landed": 559.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "water",
+     "name": "Water distiller 4 L/h",
+     "name_ar": "مقطر ماء 4 لتر/ساعة",
+     "model": "Liston 4 L/h",
+     "exw": 750.0,
+     "landed": 1034.24,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    }
+   ],
+   "skipped": [
+    {
+     "key": "pipettes",
+     "name": "Micropipettes ×3 + stand + tips",
+     "landed": 259.17,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "balance",
+     "name": "Analytical balance 0.001 g",
+     "landed": 217.05,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "water_bath",
+     "name": "Digital water bath",
+     "landed": 114.19,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "esr_auto",
+     "name": "ESR analyzer (automated)",
+     "landed": 712.57,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "urine",
+     "name": "Urine analyzer (dipstick reader)",
+     "landed": 371.75,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "pc",
+     "name": "PC + monitor + laser printer",
+     "landed": 1250.0,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "autoclave",
+     "name": "Autoclave 18–24 L",
+     "landed": 233.99,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "biosafety",
+     "name": "Biosafety / PPE starter kit",
+     "landed": 700.0,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "incubator",
+     "name": "Laboratory incubator 50 L",
+     "landed": 403.87,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "electrolyte",
+     "name": "Electrolyte analyzer Na/K/Cl",
+     "landed": 1133.17,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "coag",
+     "name": "Coagulation analyzer 2-channel",
+     "landed": 641.35,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "elisa",
+     "name": "ELISA reader + washer",
+     "landed": 2224.23,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "hba1c",
+     "name": "HbA1c analyzer",
+     "landed": 712.57,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "furniture",
+     "name": "Furniture and fit-out",
+     "landed": 9000.0,
+     "why": "does not fit the remaining budget"
+    }
+   ],
+   "shortfall": 17973.91,
+   "multiplier": 1.3646,
+   "covered_tests": [
+    "cbc",
+    "chem",
+    "malaria",
+    "panel",
+    "semen",
+    "stool"
+   ]
+  },
+  {
+   "budget": 10000,
+   "spent": 9812.01,
+   "left": 187.99,
+   "got": [
+    {
+     "key": "cbc_biobase",
+     "name": "3-part CBC analyzer",
+     "name_ar": "جهاز صورة دم كاملة 3-part",
+     "model": "BH-HA310",
+     "exw": 1835.86,
+     "landed": 2807.31,
+     "kind": "quote",
+     "open_system": false,
+     "cls": "analyzer"
+    },
+    {
+     "key": "chem_biobase",
+     "name": "Semi-auto chemistry analyzer",
+     "name_ar": "جهاز كيمياء نصف آلي",
+     "model": "Biobase-Silver",
+     "exw": 612.36,
+     "landed": 857.54,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "centrifuge",
+     "name": "Centrifuge 6–8 place",
+     "name_ar": "سنترفيوج 6 عين",
+     "model": "LC-H4KII",
+     "exw": 110.22,
+     "landed": 189.12,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "microscope",
+     "name": "Binocular LED microscope + 100× oil",
+     "name_ar": "ميكروسكوب ضوئي ثنائي العينية",
+     "model": "BBM-3110B",
+     "exw": 149.42,
+     "landed": 244.16,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "fridge",
+     "name": "Reagent fridge 250–400 L, glass door",
+     "name_ar": "ثلاجة كواشف بباب زجاجي",
+     "model": "HYC-400",
+     "exw": 920.0,
+     "landed": 1249.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "ups",
+     "name": "Online UPS 3 kVA",
+     "name_ar": "UPS أونلاين 3kVA",
+     "model": "3 kVA online",
+     "exw": 430.0,
+     "landed": 430.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "avr",
+     "name": "Voltage stabiliser 5 kVA",
+     "name_ar": "منظم جهد 5kVA",
+     "model": "VGMW 500 Plus",
+     "exw": 129.0,
+     "landed": 129.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "generator",
+     "name": "Petrol generator 5 kVA",
+     "name_ar": "مولد بنزين 5kVA",
+     "model": "ECO7990ES",
+     "exw": 559.0,
+     "landed": 559.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "water",
+     "name": "Water distiller 4 L/h",
+     "name_ar": "مقطر ماء 4 لتر/ساعة",
+     "model": "Liston 4 L/h",
+     "exw": 750.0,
+     "landed": 1034.24,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "pipettes",
+     "name": "Micropipettes ×3 + stand + tips",
+     "name_ar": "ماصات دقيقة ×3 + حامل + رؤوس",
+     "model": "2–20 / 20–200 / 100–1000 µL",
+     "exw": 160.0,
+     "landed": 259.17,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "balance",
+     "name": "Analytical balance 0.001 g",
+     "name_ar": "ميزان تحليلي 0.001g",
+     "model": "JA103P",
+     "exw": 130.0,
+     "landed": 217.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "water_bath",
+     "name": "Digital water bath",
+     "name_ar": "حمام مائي رقمي",
+     "model": "HH-S2",
+     "exw": 60.0,
+     "landed": 114.19,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "esr_auto",
+     "name": "ESR analyzer (automated)",
+     "name_ar": "جهاز سرعة ترسيب آلي",
+     "model": "BK-ESR20",
+     "exw": 500.0,
+     "landed": 712.57,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "urine",
+     "name": "Urine analyzer (dipstick reader)",
+     "name_ar": "جهاز تحليل بول",
+     "model": "BH-NY01S",
+     "exw": 242.0,
+     "landed": 371.75,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "autoclave",
+     "name": "Autoclave 18–24 L",
+     "name_ar": "أوتوكلاف 18–24 لتر",
+     "model": "AT-P24A",
+     "exw": 142.0,
+     "landed": 233.99,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "incubator",
+     "name": "Laboratory incubator 50 L",
+     "name_ar": "حاضنة مختبر",
+     "model": "BJPX-H50IV",
+     "exw": 265.0,
+     "landed": 403.87,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    }
+   ],
+   "skipped": [
+    {
+     "key": "pc",
+     "name": "PC + monitor + laser printer",
+     "landed": 1250.0,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "biosafety",
+     "name": "Biosafety / PPE starter kit",
+     "landed": 700.0,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "electrolyte",
+     "name": "Electrolyte analyzer Na/K/Cl",
+     "landed": 1133.17,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "coag",
+     "name": "Coagulation analyzer 2-channel",
+     "landed": 641.35,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "elisa",
+     "name": "ELISA reader + washer",
+     "landed": 2224.23,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "hba1c",
+     "name": "HbA1c analyzer",
+     "landed": 712.57,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "furniture",
+     "name": "Furniture and fit-out",
+     "landed": 9000.0,
+     "why": "does not fit the remaining budget"
+    }
+   ],
+   "shortfall": 15661.32,
+   "multiplier": 1.4027,
+   "covered_tests": [
+    "cbc",
+    "chem",
+    "esr",
+    "malaria",
+    "panel",
+    "semen",
+    "serology",
+    "stool",
+    "urine"
+   ]
+  },
+  {
+   "budget": 15000,
+   "spent": 14249.1,
+   "left": 750.9,
+   "got": [
+    {
+     "key": "cbc_biobase",
+     "name": "3-part CBC analyzer",
+     "name_ar": "جهاز صورة دم كاملة 3-part",
+     "model": "BH-HA310",
+     "exw": 1835.86,
+     "landed": 2807.31,
+     "kind": "quote",
+     "open_system": false,
+     "cls": "analyzer"
+    },
+    {
+     "key": "chem_biobase",
+     "name": "Semi-auto chemistry analyzer",
+     "name_ar": "جهاز كيمياء نصف آلي",
+     "model": "Biobase-Silver",
+     "exw": 612.36,
+     "landed": 857.54,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "centrifuge",
+     "name": "Centrifuge 6–8 place",
+     "name_ar": "سنترفيوج 6 عين",
+     "model": "LC-H4KII",
+     "exw": 110.22,
+     "landed": 189.12,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "microscope",
+     "name": "Binocular LED microscope + 100× oil",
+     "name_ar": "ميكروسكوب ضوئي ثنائي العينية",
+     "model": "BBM-3110B",
+     "exw": 149.42,
+     "landed": 244.16,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "fridge",
+     "name": "Reagent fridge 250–400 L, glass door",
+     "name_ar": "ثلاجة كواشف بباب زجاجي",
+     "model": "HYC-400",
+     "exw": 920.0,
+     "landed": 1249.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "ups",
+     "name": "Online UPS 3 kVA",
+     "name_ar": "UPS أونلاين 3kVA",
+     "model": "3 kVA online",
+     "exw": 430.0,
+     "landed": 430.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "avr",
+     "name": "Voltage stabiliser 5 kVA",
+     "name_ar": "منظم جهد 5kVA",
+     "model": "VGMW 500 Plus",
+     "exw": 129.0,
+     "landed": 129.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "generator",
+     "name": "Petrol generator 5 kVA",
+     "name_ar": "مولد بنزين 5kVA",
+     "model": "ECO7990ES",
+     "exw": 559.0,
+     "landed": 559.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "water",
+     "name": "Water distiller 4 L/h",
+     "name_ar": "مقطر ماء 4 لتر/ساعة",
+     "model": "Liston 4 L/h",
+     "exw": 750.0,
+     "landed": 1034.24,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "pipettes",
+     "name": "Micropipettes ×3 + stand + tips",
+     "name_ar": "ماصات دقيقة ×3 + حامل + رؤوس",
+     "model": "2–20 / 20–200 / 100–1000 µL",
+     "exw": 160.0,
+     "landed": 259.17,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "balance",
+     "name": "Analytical balance 0.001 g",
+     "name_ar": "ميزان تحليلي 0.001g",
+     "model": "JA103P",
+     "exw": 130.0,
+     "landed": 217.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "water_bath",
+     "name": "Digital water bath",
+     "name_ar": "حمام مائي رقمي",
+     "model": "HH-S2",
+     "exw": 60.0,
+     "landed": 114.19,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "esr_auto",
+     "name": "ESR analyzer (automated)",
+     "name_ar": "جهاز سرعة ترسيب آلي",
+     "model": "BK-ESR20",
+     "exw": 500.0,
+     "landed": 712.57,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "urine",
+     "name": "Urine analyzer (dipstick reader)",
+     "name_ar": "جهاز تحليل بول",
+     "model": "BH-NY01S",
+     "exw": 242.0,
+     "landed": 371.75,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "pc",
+     "name": "PC + monitor + laser printer",
+     "name_ar": "كمبيوتر + شاشة + طابعة ليزر",
+     "model": "i5 / 16 GB / SSD",
+     "exw": 1250.0,
+     "landed": 1250.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "it"
+    },
+    {
+     "key": "autoclave",
+     "name": "Autoclave 18–24 L",
+     "name_ar": "أوتوكلاف 18–24 لتر",
+     "model": "AT-P24A",
+     "exw": 142.0,
+     "landed": 233.99,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "biosafety",
+     "name": "Biosafety / PPE starter kit",
+     "name_ar": "عدة سلامة وأمن حيوي",
+     "model": "Lab coats + gloves + goggles + sharps + spill kit",
+     "exw": 700.0,
+     "landed": 700.0,
+     "kind": "estimate",
+     "open_system": true,
+     "cls": "safety"
+    },
+    {
+     "key": "incubator",
+     "name": "Laboratory incubator 50 L",
+     "name_ar": "حاضنة مختبر",
+     "model": "BJPX-H50IV",
+     "exw": 265.0,
+     "landed": 403.87,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "electrolyte",
+     "name": "Electrolyte analyzer Na/K/Cl",
+     "name_ar": "جهاز كهارل Na/K/Cl",
+     "model": "BKE-A",
+     "exw": 828.0,
+     "landed": 1133.17,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "coag",
+     "name": "Coagulation analyzer 2-channel",
+     "name_ar": "جهاز تخثر قناتين",
+     "model": "BK-CA02",
+     "exw": 445.0,
+     "landed": 641.35,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "hba1c",
+     "name": "HbA1c analyzer",
+     "name_ar": "جهاز HbA1c",
+     "model": "A1C EZ 2.0",
+     "exw": 500.0,
+     "landed": 712.57,
+     "kind": "sourced",
+     "open_system": false,
+     "cls": "analyzer"
+    }
+   ],
+   "skipped": [
+    {
+     "key": "elisa",
+     "name": "ELISA reader + washer",
+     "landed": 2224.23,
+     "why": "does not fit the remaining budget"
+    },
+    {
+     "key": "furniture",
+     "name": "Furniture and fit-out",
+     "landed": 9000.0,
+     "why": "does not fit the remaining budget"
+    }
+   ],
+   "shortfall": 11224.23,
+   "multiplier": 1.3295,
+   "covered_tests": [
+    "cbc",
+    "chem",
+    "coag",
+    "electro",
+    "esr",
+    "hba1c",
+    "malaria",
+    "panel",
+    "semen",
+    "serology",
+    "stool",
+    "urine"
+   ]
+  },
+  {
+   "budget": 20000,
+   "spent": 16473.33,
+   "left": 3526.67,
+   "got": [
+    {
+     "key": "cbc_biobase",
+     "name": "3-part CBC analyzer",
+     "name_ar": "جهاز صورة دم كاملة 3-part",
+     "model": "BH-HA310",
+     "exw": 1835.86,
+     "landed": 2807.31,
+     "kind": "quote",
+     "open_system": false,
+     "cls": "analyzer"
+    },
+    {
+     "key": "chem_biobase",
+     "name": "Semi-auto chemistry analyzer",
+     "name_ar": "جهاز كيمياء نصف آلي",
+     "model": "Biobase-Silver",
+     "exw": 612.36,
+     "landed": 857.54,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "centrifuge",
+     "name": "Centrifuge 6–8 place",
+     "name_ar": "سنترفيوج 6 عين",
+     "model": "LC-H4KII",
+     "exw": 110.22,
+     "landed": 189.12,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "microscope",
+     "name": "Binocular LED microscope + 100× oil",
+     "name_ar": "ميكروسكوب ضوئي ثنائي العينية",
+     "model": "BBM-3110B",
+     "exw": 149.42,
+     "landed": 244.16,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "fridge",
+     "name": "Reagent fridge 250–400 L, glass door",
+     "name_ar": "ثلاجة كواشف بباب زجاجي",
+     "model": "HYC-400",
+     "exw": 920.0,
+     "landed": 1249.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "ups",
+     "name": "Online UPS 3 kVA",
+     "name_ar": "UPS أونلاين 3kVA",
+     "model": "3 kVA online",
+     "exw": 430.0,
+     "landed": 430.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "avr",
+     "name": "Voltage stabiliser 5 kVA",
+     "name_ar": "منظم جهد 5kVA",
+     "model": "VGMW 500 Plus",
+     "exw": 129.0,
+     "landed": 129.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "generator",
+     "name": "Petrol generator 5 kVA",
+     "name_ar": "مولد بنزين 5kVA",
+     "model": "ECO7990ES",
+     "exw": 559.0,
+     "landed": 559.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "water",
+     "name": "Water distiller 4 L/h",
+     "name_ar": "مقطر ماء 4 لتر/ساعة",
+     "model": "Liston 4 L/h",
+     "exw": 750.0,
+     "landed": 1034.24,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "pipettes",
+     "name": "Micropipettes ×3 + stand + tips",
+     "name_ar": "ماصات دقيقة ×3 + حامل + رؤوس",
+     "model": "2–20 / 20–200 / 100–1000 µL",
+     "exw": 160.0,
+     "landed": 259.17,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "balance",
+     "name": "Analytical balance 0.001 g",
+     "name_ar": "ميزان تحليلي 0.001g",
+     "model": "JA103P",
+     "exw": 130.0,
+     "landed": 217.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "water_bath",
+     "name": "Digital water bath",
+     "name_ar": "حمام مائي رقمي",
+     "model": "HH-S2",
+     "exw": 60.0,
+     "landed": 114.19,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "esr_auto",
+     "name": "ESR analyzer (automated)",
+     "name_ar": "جهاز سرعة ترسيب آلي",
+     "model": "BK-ESR20",
+     "exw": 500.0,
+     "landed": 712.57,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "urine",
+     "name": "Urine analyzer (dipstick reader)",
+     "name_ar": "جهاز تحليل بول",
+     "model": "BH-NY01S",
+     "exw": 242.0,
+     "landed": 371.75,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "pc",
+     "name": "PC + monitor + laser printer",
+     "name_ar": "كمبيوتر + شاشة + طابعة ليزر",
+     "model": "i5 / 16 GB / SSD",
+     "exw": 1250.0,
+     "landed": 1250.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "it"
+    },
+    {
+     "key": "autoclave",
+     "name": "Autoclave 18–24 L",
+     "name_ar": "أوتوكلاف 18–24 لتر",
+     "model": "AT-P24A",
+     "exw": 142.0,
+     "landed": 233.99,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "biosafety",
+     "name": "Biosafety / PPE starter kit",
+     "name_ar": "عدة سلامة وأمن حيوي",
+     "model": "Lab coats + gloves + goggles + sharps + spill kit",
+     "exw": 700.0,
+     "landed": 700.0,
+     "kind": "estimate",
+     "open_system": true,
+     "cls": "safety"
+    },
+    {
+     "key": "incubator",
+     "name": "Laboratory incubator 50 L",
+     "name_ar": "حاضنة مختبر",
+     "model": "BJPX-H50IV",
+     "exw": 265.0,
+     "landed": 403.87,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "electrolyte",
+     "name": "Electrolyte analyzer Na/K/Cl",
+     "name_ar": "جهاز كهارل Na/K/Cl",
+     "model": "BKE-A",
+     "exw": 828.0,
+     "landed": 1133.17,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "coag",
+     "name": "Coagulation analyzer 2-channel",
+     "name_ar": "جهاز تخثر قناتين",
+     "model": "BK-CA02",
+     "exw": 445.0,
+     "landed": 641.35,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "elisa",
+     "name": "ELISA reader + washer",
+     "name_ar": "قارئ وغاسل ELISA",
+     "model": "BK-EL10B + BK-9622",
+     "exw": 1700.0,
+     "landed": 2224.23,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "hba1c",
+     "name": "HbA1c analyzer",
+     "name_ar": "جهاز HbA1c",
+     "model": "A1C EZ 2.0",
+     "exw": 500.0,
+     "landed": 712.57,
+     "kind": "sourced",
+     "open_system": false,
+     "cls": "analyzer"
+    }
+   ],
+   "skipped": [
+    {
+     "key": "furniture",
+     "name": "Furniture and fit-out",
+     "landed": 9000.0,
+     "why": "does not fit the remaining budget"
+    }
+   ],
+   "shortfall": 9000.0,
+   "multiplier": 1.3266,
+   "covered_tests": [
+    "cbc",
+    "chem",
+    "coag",
+    "electro",
+    "elisa",
+    "esr",
+    "hba1c",
+    "malaria",
+    "panel",
+    "semen",
+    "serology",
+    "stool",
+    "urine"
+   ]
+  },
+  {
+   "budget": 25000,
+   "spent": 16473.33,
+   "left": 8526.67,
+   "got": [
+    {
+     "key": "cbc_biobase",
+     "name": "3-part CBC analyzer",
+     "name_ar": "جهاز صورة دم كاملة 3-part",
+     "model": "BH-HA310",
+     "exw": 1835.86,
+     "landed": 2807.31,
+     "kind": "quote",
+     "open_system": false,
+     "cls": "analyzer"
+    },
+    {
+     "key": "chem_biobase",
+     "name": "Semi-auto chemistry analyzer",
+     "name_ar": "جهاز كيمياء نصف آلي",
+     "model": "Biobase-Silver",
+     "exw": 612.36,
+     "landed": 857.54,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "centrifuge",
+     "name": "Centrifuge 6–8 place",
+     "name_ar": "سنترفيوج 6 عين",
+     "model": "LC-H4KII",
+     "exw": 110.22,
+     "landed": 189.12,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "microscope",
+     "name": "Binocular LED microscope + 100× oil",
+     "name_ar": "ميكروسكوب ضوئي ثنائي العينية",
+     "model": "BBM-3110B",
+     "exw": 149.42,
+     "landed": 244.16,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "fridge",
+     "name": "Reagent fridge 250–400 L, glass door",
+     "name_ar": "ثلاجة كواشف بباب زجاجي",
+     "model": "HYC-400",
+     "exw": 920.0,
+     "landed": 1249.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "ups",
+     "name": "Online UPS 3 kVA",
+     "name_ar": "UPS أونلاين 3kVA",
+     "model": "3 kVA online",
+     "exw": 430.0,
+     "landed": 430.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "avr",
+     "name": "Voltage stabiliser 5 kVA",
+     "name_ar": "منظم جهد 5kVA",
+     "model": "VGMW 500 Plus",
+     "exw": 129.0,
+     "landed": 129.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "generator",
+     "name": "Petrol generator 5 kVA",
+     "name_ar": "مولد بنزين 5kVA",
+     "model": "ECO7990ES",
+     "exw": 559.0,
+     "landed": 559.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "water",
+     "name": "Water distiller 4 L/h",
+     "name_ar": "مقطر ماء 4 لتر/ساعة",
+     "model": "Liston 4 L/h",
+     "exw": 750.0,
+     "landed": 1034.24,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "pipettes",
+     "name": "Micropipettes ×3 + stand + tips",
+     "name_ar": "ماصات دقيقة ×3 + حامل + رؤوس",
+     "model": "2–20 / 20–200 / 100–1000 µL",
+     "exw": 160.0,
+     "landed": 259.17,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "balance",
+     "name": "Analytical balance 0.001 g",
+     "name_ar": "ميزان تحليلي 0.001g",
+     "model": "JA103P",
+     "exw": 130.0,
+     "landed": 217.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "water_bath",
+     "name": "Digital water bath",
+     "name_ar": "حمام مائي رقمي",
+     "model": "HH-S2",
+     "exw": 60.0,
+     "landed": 114.19,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "esr_auto",
+     "name": "ESR analyzer (automated)",
+     "name_ar": "جهاز سرعة ترسيب آلي",
+     "model": "BK-ESR20",
+     "exw": 500.0,
+     "landed": 712.57,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "urine",
+     "name": "Urine analyzer (dipstick reader)",
+     "name_ar": "جهاز تحليل بول",
+     "model": "BH-NY01S",
+     "exw": 242.0,
+     "landed": 371.75,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "pc",
+     "name": "PC + monitor + laser printer",
+     "name_ar": "كمبيوتر + شاشة + طابعة ليزر",
+     "model": "i5 / 16 GB / SSD",
+     "exw": 1250.0,
+     "landed": 1250.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "it"
+    },
+    {
+     "key": "autoclave",
+     "name": "Autoclave 18–24 L",
+     "name_ar": "أوتوكلاف 18–24 لتر",
+     "model": "AT-P24A",
+     "exw": 142.0,
+     "landed": 233.99,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "biosafety",
+     "name": "Biosafety / PPE starter kit",
+     "name_ar": "عدة سلامة وأمن حيوي",
+     "model": "Lab coats + gloves + goggles + sharps + spill kit",
+     "exw": 700.0,
+     "landed": 700.0,
+     "kind": "estimate",
+     "open_system": true,
+     "cls": "safety"
+    },
+    {
+     "key": "incubator",
+     "name": "Laboratory incubator 50 L",
+     "name_ar": "حاضنة مختبر",
+     "model": "BJPX-H50IV",
+     "exw": 265.0,
+     "landed": 403.87,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "electrolyte",
+     "name": "Electrolyte analyzer Na/K/Cl",
+     "name_ar": "جهاز كهارل Na/K/Cl",
+     "model": "BKE-A",
+     "exw": 828.0,
+     "landed": 1133.17,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "coag",
+     "name": "Coagulation analyzer 2-channel",
+     "name_ar": "جهاز تخثر قناتين",
+     "model": "BK-CA02",
+     "exw": 445.0,
+     "landed": 641.35,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "elisa",
+     "name": "ELISA reader + washer",
+     "name_ar": "قارئ وغاسل ELISA",
+     "model": "BK-EL10B + BK-9622",
+     "exw": 1700.0,
+     "landed": 2224.23,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "hba1c",
+     "name": "HbA1c analyzer",
+     "name_ar": "جهاز HbA1c",
+     "model": "A1C EZ 2.0",
+     "exw": 500.0,
+     "landed": 712.57,
+     "kind": "sourced",
+     "open_system": false,
+     "cls": "analyzer"
+    }
+   ],
+   "skipped": [
+    {
+     "key": "furniture",
+     "name": "Furniture and fit-out",
+     "landed": 9000.0,
+     "why": "does not fit the remaining budget"
+    }
+   ],
+   "shortfall": 9000.0,
+   "multiplier": 1.3266,
+   "covered_tests": [
+    "cbc",
+    "chem",
+    "coag",
+    "electro",
+    "elisa",
+    "esr",
+    "hba1c",
+    "malaria",
+    "panel",
+    "semen",
+    "serology",
+    "stool",
+    "urine"
+   ]
+  },
+  {
+   "budget": 30000,
+   "spent": 25473.33,
+   "left": 4526.67,
+   "got": [
+    {
+     "key": "cbc_biobase",
+     "name": "3-part CBC analyzer",
+     "name_ar": "جهاز صورة دم كاملة 3-part",
+     "model": "BH-HA310",
+     "exw": 1835.86,
+     "landed": 2807.31,
+     "kind": "quote",
+     "open_system": false,
+     "cls": "analyzer"
+    },
+    {
+     "key": "chem_biobase",
+     "name": "Semi-auto chemistry analyzer",
+     "name_ar": "جهاز كيمياء نصف آلي",
+     "model": "Biobase-Silver",
+     "exw": 612.36,
+     "landed": 857.54,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "centrifuge",
+     "name": "Centrifuge 6–8 place",
+     "name_ar": "سنترفيوج 6 عين",
+     "model": "LC-H4KII",
+     "exw": 110.22,
+     "landed": 189.12,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "microscope",
+     "name": "Binocular LED microscope + 100× oil",
+     "name_ar": "ميكروسكوب ضوئي ثنائي العينية",
+     "model": "BBM-3110B",
+     "exw": 149.42,
+     "landed": 244.16,
+     "kind": "quote",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "fridge",
+     "name": "Reagent fridge 250–400 L, glass door",
+     "name_ar": "ثلاجة كواشف بباب زجاجي",
+     "model": "HYC-400",
+     "exw": 920.0,
+     "landed": 1249.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "ups",
+     "name": "Online UPS 3 kVA",
+     "name_ar": "UPS أونلاين 3kVA",
+     "model": "3 kVA online",
+     "exw": 430.0,
+     "landed": 430.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "avr",
+     "name": "Voltage stabiliser 5 kVA",
+     "name_ar": "منظم جهد 5kVA",
+     "model": "VGMW 500 Plus",
+     "exw": 129.0,
+     "landed": 129.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "generator",
+     "name": "Petrol generator 5 kVA",
+     "name_ar": "مولد بنزين 5kVA",
+     "model": "ECO7990ES",
+     "exw": 559.0,
+     "landed": 559.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "power"
+    },
+    {
+     "key": "water",
+     "name": "Water distiller 4 L/h",
+     "name_ar": "مقطر ماء 4 لتر/ساعة",
+     "model": "Liston 4 L/h",
+     "exw": 750.0,
+     "landed": 1034.24,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "pipettes",
+     "name": "Micropipettes ×3 + stand + tips",
+     "name_ar": "ماصات دقيقة ×3 + حامل + رؤوس",
+     "model": "2–20 / 20–200 / 100–1000 µL",
+     "exw": 160.0,
+     "landed": 259.17,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "balance",
+     "name": "Analytical balance 0.001 g",
+     "name_ar": "ميزان تحليلي 0.001g",
+     "model": "JA103P",
+     "exw": 130.0,
+     "landed": 217.05,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "water_bath",
+     "name": "Digital water bath",
+     "name_ar": "حمام مائي رقمي",
+     "model": "HH-S2",
+     "exw": 60.0,
+     "landed": 114.19,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "esr_auto",
+     "name": "ESR analyzer (automated)",
+     "name_ar": "جهاز سرعة ترسيب آلي",
+     "model": "BK-ESR20",
+     "exw": 500.0,
+     "landed": 712.57,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "urine",
+     "name": "Urine analyzer (dipstick reader)",
+     "name_ar": "جهاز تحليل بول",
+     "model": "BH-NY01S",
+     "exw": 242.0,
+     "landed": 371.75,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "pc",
+     "name": "PC + monitor + laser printer",
+     "name_ar": "كمبيوتر + شاشة + طابعة ليزر",
+     "model": "i5 / 16 GB / SSD",
+     "exw": 1250.0,
+     "landed": 1250.0,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "it"
+    },
+    {
+     "key": "autoclave",
+     "name": "Autoclave 18–24 L",
+     "name_ar": "أوتوكلاف 18–24 لتر",
+     "model": "AT-P24A",
+     "exw": 142.0,
+     "landed": 233.99,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "biosafety",
+     "name": "Biosafety / PPE starter kit",
+     "name_ar": "عدة سلامة وأمن حيوي",
+     "model": "Lab coats + gloves + goggles + sharps + spill kit",
+     "exw": 700.0,
+     "landed": 700.0,
+     "kind": "estimate",
+     "open_system": true,
+     "cls": "safety"
+    },
+    {
+     "key": "incubator",
+     "name": "Laboratory incubator 50 L",
+     "name_ar": "حاضنة مختبر",
+     "model": "BJPX-H50IV",
+     "exw": 265.0,
+     "landed": 403.87,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "essential"
+    },
+    {
+     "key": "electrolyte",
+     "name": "Electrolyte analyzer Na/K/Cl",
+     "name_ar": "جهاز كهارل Na/K/Cl",
+     "model": "BKE-A",
+     "exw": 828.0,
+     "landed": 1133.17,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "coag",
+     "name": "Coagulation analyzer 2-channel",
+     "name_ar": "جهاز تخثر قناتين",
+     "model": "BK-CA02",
+     "exw": 445.0,
+     "landed": 641.35,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "elisa",
+     "name": "ELISA reader + washer",
+     "name_ar": "قارئ وغاسل ELISA",
+     "model": "BK-EL10B + BK-9622",
+     "exw": 1700.0,
+     "landed": 2224.23,
+     "kind": "sourced",
+     "open_system": true,
+     "cls": "analyzer"
+    },
+    {
+     "key": "hba1c",
+     "name": "HbA1c analyzer",
+     "name_ar": "جهاز HbA1c",
+     "model": "A1C EZ 2.0",
+     "exw": 500.0,
+     "landed": 712.57,
+     "kind": "sourced",
+     "open_system": false,
+     "cls": "analyzer"
+    },
+    {
+     "key": "furniture",
+     "name": "Furniture and fit-out",
+     "name_ar": "أثاث وتجهيز المعمل",
+     "model": "Benches, sink, racks, waiting area",
+     "exw": 9000.0,
+     "landed": 9000.0,
+     "kind": "estimate",
+     "open_system": true,
+     "cls": "fitout"
+    }
+   ],
+   "skipped": [],
+   "shortfall": 0,
+   "multiplier": 1.1893,
+   "covered_tests": [
+    "cbc",
+    "chem",
+    "coag",
+    "electro",
+    "elisa",
+    "esr",
+    "hba1c",
+    "malaria",
+    "panel",
+    "semen",
+    "serology",
+    "stool",
+    "urine"
+   ]
+  }
+ ],
+ "budget_scenarios": [
+  {
+   "key": "5k",
+   "name": "What $5,000 buys",
+   "capex": 6002,
+   "fund": 9300.0,
+   "payback": 7.9,
+   "npv": 81449,
+   "be": 33.9,
+   "yr1": 92539,
+   "items": 7,
+   "tests": [
+    "cbc",
+    "chem",
+    "malaria",
+    "panel",
+    "semen",
+    "stool"
+   ]
+  },
+  {
+   "key": "full",
+   "name": "Full opening kit",
+   "capex": 37765,
+   "fund": 36800.0,
+   "payback": 17.8,
+   "npv": 48076,
+   "be": 42.8,
+   "yr1": 87092,
+   "items": 19,
+   "tests": []
   }
  ],
  "price_list_source": "مركز أركوت الصحي — قائمة أسعار الفحوصات والخدمات (photo, owner)",
