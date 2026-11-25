@@ -2103,11 +2103,24 @@
     wireRowActions();
     wireCardInputs();
     wirePlanInputs();
-    selectTab(/plan/.test(location.hash) ? "plan" : "overview");
+    // The study is the deliverable, so it opens first; the dashboard tabs are
+    // one click away and every number in the study comes from them.
+    selectTab(/overview|tests|capex|opex|assumptions|monthly|quant/.test(location.hash)
+      ? location.hash.replace("#", "")
+      : "plan");
     syncAssumptionInputs();
     syncPlanInputs();
     renderReport();
   }
+
+  /* deep links: #tests, #quant, #plan … switch tabs without a reload */
+  window.addEventListener("hashchange", function () {
+    var name = (location.hash || "").replace("#", "");
+    if (/^(overview|tests|capex|opex|assumptions|monthly|quant|plan)$/.test(name)) {
+      selectTab(name);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  });
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
