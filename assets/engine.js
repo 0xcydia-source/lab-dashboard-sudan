@@ -13,6 +13,7 @@
 
   var A = {
     fx_sdg: 12000, fx_egp: 54, fx_drift: 0.18, pass_through: 0.9, pass_lag_months: 1,
+    reagent_fx_beta: 0,
     days: 26, price_index: 1, tests_per_patient: 1.55, vc_mult: 1, opex_mult: 1,
     capex_mult: 1, discount: 0.22, tax: 0.17, dep_years_eq: 5, dep_years_it: 3,
     dep_years_fit: 5, phase2_month: 6, phase3_month: 16, terminal_ebitda_x: 12,
@@ -273,18 +274,24 @@
       var keys = liveKeys(t, st, p);
       var tot = keys.reduce(function (s, k) { return s + k.share; }, 0) || 1;
       var season = SEASON[m] || 1;
-      var rEff = fxAt(Math.max(t - p.pass_lag_months, 0)) / p.fx_sdg - 1;
-      var priceF = (1 + p.pass_through * rEff) * Math.pow(1 - p.price_erosion, t / 12);
-      var erosionF = Math.pow(1 - p.price_erosion, t / 12);
+      // --- FX exposure (identical to model.py) ---------------------------
+      // The lab charges in SDG but buys reagents in USD. The USD list is the
+      // anchor; what is realized depends on how much of the SDG move has been
+      // repriced (pass_through) and how stale the live list is (pass_lag).
       var fxNow = fxAt(t);
-
+      var fxList = t >= p.pass_lag_months ? fxAt(t - p.pass_lag_months) : p.fx_sdg;
+      var fxPriceF = Math.pow(fxList / p.fx_sdg, p.pass_through) / (fxNow / p.fx_sdg);
+      var erosionF = Math.pow(1 - p.price_erosion, t / 12);
+      var priceF = fxPriceF * erosionF;
+      var costFxF = Math.pow(fxNow / p.fx_sdg, p.reagent_fx_beta);
       var revSdg = 0, varc = 0, per = {};
       keys.forEach(function (k) {
         var mult = SEASONAL.indexOf(k.key) >= 0 ? season : 1;
         var n = d.orders * (k.share / tot) * (1 + (mult - 1) * 0.35);
-        // USD-priced menu: no FX pass-through (USD is the anchor), only erosion
-        var pUsd = k.price_usd * p.price_index * erosionF;
-        var vc = k.vc * p.vc_mult * (1 + p.import_premium);
+        // USD-priced menu: the SDG list is derived, and `priceF` is the share of
+        // the USD price actually realized after FX and repricing lag.
+        var pUsd = k.price_usd * p.price_index * priceF;
+        var vc = k.vc * p.vc_mult * (1 + p.import_premium) * costFxF;
         revSdg += n * pUsd * fxNow;
         varc += n * vc;
         per[k.key] = {
@@ -391,7 +398,7 @@
 
     return {
       p1: cap.p1, p2: cap.p2_total, p3: cap.p3_total, hardware: cap.hardware,
-      capex_total: Math.round(capexTotal),
+      capex_total: Math.round(capexTotal), stock_wc: Math.round(res.wcPeak),
       wc_peak: Math.round(res.wcPeak),
       invested: Math.round(cap.p1 + res.wcPeak),
       payback_months: payback === null ? null : Math.round(payback * 10) / 10,
@@ -470,13 +477,224 @@
     return { rho: rho, p_wait: pw, wq: pw / (c * mu - lam) * 60 };
   }
 
+  /* ================================================================ QUANT
+   * Deterministic Monte Carlo, variance attribution, price ladder and the FX
+   * ladder. These mirror model.py 1:1 — the parity test compares every one of
+   * them, so a change here must be made there too.
+   * ==================================================================== */
+  var DIST = {
+    vol_sigma: 0.22,
+    fx_drift_mean: 0.18, fx_drift_sigma: 0.12, fx_drift_floor: -0.05,
+    price_sigma: 0.07, vc_sigma: 0.10, opex_sigma: 0.07,
+    tpp_sigma: 0.12, pass_sigma: 0.08,
+    seed: 20261125, draws: 2000
+  };
+  var FX_DRIFTS = [0.0, 0.10, 0.18, 0.30, 0.45, 0.60, 0.80];
+
+  /* 64-bit LCG in BigInt so the sequence is bit-identical to model.py's
+   * integer generator — the Monte Carlo in the browser and in the report must
+   * draw the same numbers, otherwise the parity test is meaningless. */
+  var LCG_MUL = 6364136223846793005n, LCG_ADD = 1442695040888963407n, MASK64 = (1n << 64n) - 1n;
+  function Lcg(seed) { this.s = (BigInt(seed) & MASK64); }
+  Lcg.prototype.next = function () {
+    this.s = (this.s * LCG_MUL + LCG_ADD) & MASK64;
+    return Number((this.s >> 11n) & ((1n << 53n) - 1n)) / 9007199254740992;
+  };
+  function makeRng(seed) { var r = new Lcg(seed); return function () { return r.next(); }; }
+  function normPair(u) {
+    return Math.sqrt(-2 * Math.log(Math.max(u(), 1e-12))) * Math.cos(2 * Math.PI * u());
+  }
+
+  function mcDraws(n, dist, baseP) {
+    var d = Object.assign({}, DIST, dist || {});
+    n = n || d.draws;
+    var u = makeRng(d.seed), p0 = baseP || A, out = [];
+    for (var i = 0; i < n; i++) {
+      var vol = Math.exp(d.vol_sigma * normPair(u));
+      out.push({
+        vol: Math.round(Math.min(2.5, Math.max(0.15, vol)) * 1e4) / 1e4,
+        fx_drift: Math.round(Math.max(d.fx_drift_floor,
+          d.fx_drift_mean + d.fx_drift_sigma * normPair(u)) * 1e4) / 1e4,
+        price_index: Math.round(Math.max(0.50, p0.price_index + d.price_sigma * normPair(u)) * 1e4) / 1e4,
+        vc_mult: Math.round(Math.max(0.60, p0.vc_mult + d.vc_sigma * normPair(u)) * 1e4) / 1e4,
+        opex_mult: Math.round(Math.max(0.70, p0.opex_mult + d.opex_sigma * normPair(u)) * 1e4) / 1e4,
+        tests_per_patient: Math.round(Math.max(1.05, p0.tests_per_patient + d.tpp_sigma * normPair(u)) * 1e4) / 1e4,
+        pass_through: Math.round(Math.min(1.0, Math.max(0.30, p0.pass_through + d.pass_sigma * normPair(u))) * 1e4) / 1e4
+      });
+    }
+    return out;
+  }
+
+  function drawOverrides(dr) {
+    return { fx_drift: dr.fx_drift, price_index: dr.price_index, vc_mult: dr.vc_mult,
+             opex_mult: dr.opex_mult, tests_per_patient: dr.tests_per_patient,
+             pass_through: dr.pass_through };
+  }
+
+  /* Run the whole model per draw. Callers pass an already-built state. */
+  function mcRun(st, n, dist) {
+    var draws = mcDraws(n, dist, st.A);
+    var out = [];
+    for (var i = 0; i < draws.length; i++) {
+      var st2 = Object.assign({}, st, { A: Object.assign({}, st.A, drawOverrides(draws[i])) });
+      var m = metrics(run(st2, { vol: draws[i].vol }));
+      out.push({ dr: draws[i], npv: m.npv22, pb: m.payback_months, be: m.be_orders_day,
+                 fund: m.funding_need, m12eb: m.m12_ebitda, m36cum: m.m36_cum,
+                 margin: m.m12_margin });
+    }
+    return out;
+  }
+
+  function quantile(arr, p) {
+    if (!arr.length) return null;
+    var a = arr.slice().sort(function (x, y) { return x - y; });
+    var i = Math.min(a.length - 1, Math.max(0, Math.round(p * (a.length - 1))));
+    return a[i];
+  }
+
+  /* Summarise an already-computed set of draws (the dashboard runs them in
+   * chunks so the page stays responsive; the maths is still this one function). */
+  function mcSummaryFrom(res) {
+    var npv = res.map(function (r) { return r.npv; });
+    var pb = res.filter(function (r) { return r.pb !== null; }).map(function (r) { return r.pb; });
+    var be = res.filter(function (r) { return r.be !== null; }).map(function (r) { return r.be; });
+    var len = res.length;
+    return {
+      n: len,
+      npv_p10: quantile(npv, .10), npv_p50: quantile(npv, .50), npv_p90: quantile(npv, .90),
+      npv_mean: Math.round(npv.reduce(function (a, b) { return a + b; }, 0) / len),
+      p_npv_neg: Math.round(npv.filter(function (v) { return v < 0; }).length / len * 1000) / 1000,
+      p_npv_50k: Math.round(npv.filter(function (v) { return v > 50000; }).length / len * 1000) / 1000,
+      pb_p10: quantile(pb, .10), pb_p50: quantile(pb, .50), pb_p90: quantile(pb, .90),
+      p_never_payback: Math.round((len - pb.length) / len * 1000) / 1000,
+      be_p10: quantile(be, .10), be_p50: quantile(be, .50), be_p90: quantile(be, .90),
+      fund_p90: quantile(res.map(function (r) { return r.fund; }), .90),
+      margin_p50: quantile(res.map(function (r) { return r.margin; }), .50)
+    };
+  }
+
+  function mcSummary(st, n, dist) { return mcSummaryFrom(mcRun(st, n, dist)); }
+
+  /* rank correlation of each driver with NPV */
+  function rankCorr(rows, keys) {
+    function ranks(arr) {
+      var order = arr.map(function (v, i) { return i; })
+        .sort(function (a, b) { return arr[a] - arr[b]; });
+      var rk = new Array(arr.length);
+      order.forEach(function (idx, pos) { rk[idx] = pos; });
+      return rk;
+    }
+    var rn = ranks(rows.map(function (r) { return r.npv; }));
+    var my = (rn.length - 1) / 2;
+    var dmy = rn.reduce(function (a, b) { return a + (b - my) * (b - my); }, 0);
+    var out = (keys || ["vol", "fx_drift", "price_index", "vc_mult", "opex_mult",
+                        "tests_per_patient", "pass_through"]).map(function (key) {
+      var rx = ranks(rows.map(function (r) { return r.dr[key]; }));
+      var mx = (rx.length - 1) / 2;
+      var num = 0, dx = 0;
+      for (var i = 0; i < rx.length; i++) {
+        num += (rx[i] - mx) * (rn[i] - my);
+        dx += (rx[i] - mx) * (rx[i] - mx);
+      }
+      var den = Math.sqrt(dx * dmy);
+      return { key: key, rho: den ? Math.round(num / den * 1000) / 1000 : 0 };
+    });
+    out.sort(function (a, b) { return Math.abs(b.rho) - Math.abs(a.rho); });
+    return out;
+  }
+
+  function mcSpearman(st, n, dist) {
+    return rankCorr(mcRun(st, n, dist));
+  }
+
+  function mcSpearmanOld(st, n, dist) {
+    var draws = mcDraws(n, dist, st.A);
+    function ranks(arr) {
+      var order = arr.map(function (v, i) { return i; })
+        .sort(function (a, b) { return arr[a] - arr[b]; });
+      var rk = new Array(arr.length);
+      order.forEach(function (idx, pos) { rk[idx] = pos; });
+      return rk;
+    }
+    var npvs = draws.map(function (dr) {
+      var st2 = Object.assign({}, st, { A: Object.assign({}, st.A, drawOverrides(dr)) });
+      return metrics(run(st2, { vol: dr.vol })).npv22;
+    });
+    var rn = ranks(npvs), my = (rn.length - 1) / 2;
+    var dmy = rn.reduce(function (a, b) { return a + (b - my) * (b - my); }, 0);
+    var keys = ["vol", "fx_drift", "price_index", "vc_mult", "opex_mult",
+                "tests_per_patient", "pass_through"];
+    var out = keys.map(function (key) {
+      var rx = ranks(draws.map(function (d) { return d[key]; }));
+      var mx = (rx.length - 1) / 2;
+      var num = 0, dx = 0;
+      for (var i = 0; i < rx.length; i++) {
+        num += (rx[i] - mx) * (rn[i] - my);
+        dx += (rx[i] - mx) * (rx[i] - mx);
+      }
+      var den = Math.sqrt(dx * dmy);
+      return { key: key, rho: den ? Math.round(num / den * 1000) / 1000 : 0 };
+    });
+    out.sort(function (a, b) { return Math.abs(b.rho) - Math.abs(a.rho); });
+    return out;
+  }
+
+  /* Price ladder: the average USD price that covers fixed cost, wages and
+   * service at a given daily volume. */
+  function pricingGrid(st) {
+    var base = run(st, {});
+    var m = metrics(base);
+    var p = st.A;
+    var leak = p.revenue_leakage + p.referred_share * p.referral_pct;
+    var tpp = testsPerPatient(11, p);
+    var service = base.capex.hardware * p.service_contract_pct / 12;
+    return [20, 30, 40, 50, 60, 80, 100, 120, 150].map(function (od) {
+      var pts = od / tpp;
+      var lab = labourCost(od, pts, st);
+      var fixedAll = st.fixed_opex.reduce(function (s, o) { return s + o.usd; }, 0) * p.opex_mult
+        + lab.cost + service;
+      var priceNet = fixedAll / (od * p.days) + m.avg_vc_usd;
+      var need = priceNet / (1 - leak);
+      return { orders_day: od, price_needed: Math.round(need * 100) / 100,
+               fixed: Math.round(fixedAll),
+               margin_at_base: Math.round((m.avg_price_usd / need - 1) * 1000) / 1000 };
+    });
+  }
+
+  function fxLadder(st) {
+    return FX_DRIFTS.map(function (drift) {
+      var st1 = Object.assign({}, st, { A: Object.assign({}, st.A, { fx_drift: drift }) });
+      var m1 = metrics(run(st1, {}));
+      var st2 = Object.assign({}, st, { A: Object.assign({}, st.A,
+        { fx_drift: drift, pass_through: 0.55, pass_lag_months: 3 }) });
+      var m2 = metrics(run(st2, {}));
+      return { drift: drift, npv: m1.npv22, be: m1.be_orders_day, margin: m1.m12_margin,
+               pb: m1.payback_months, fx: m1.m12_fx, m12: m1.m12_ebitda,
+               sticky_npv: m2.npv22, sticky_margin: m2.m12_margin,
+               sticky_m12: m2.m12_ebitda };
+    });
+  }
+
+  function repricing(st) {
+    return [0, 1, 2, 3, 6].map(function (lag) {
+      var s2 = Object.assign({}, st, { A: Object.assign({}, st.A, { pass_lag_months: lag }) });
+      var m = metrics(run(s2, {}));
+      return { lag: lag, npv22: m.npv22, pb: m.payback_months, m12_ebitda: m.m12_ebitda,
+               m12_price_sdg: m.avg_price_sdg };
+    });
+  }
+
   var API = {
     A: A, MENU: MENU, CAPEX_P1: CAPEX_P1, CAPEX_P2: CAPEX_P2, CAPEX_P3: CAPEX_P3,
     LEAN_BOM: LEAN_BOM, LEAN_PCT: LEAN_PCT, PRESETS: PRESETS,
     FIXED_OPEX: FIXED_OPEX, RAMP: RAMP, SEASON: SEASON, SEASONAL: SEASONAL, LAB: LAB,
+    DIST: DIST, FX_DRIFTS: FX_DRIFTS,
     makeState: makeState, clone: clone, capex: capex, run: run, metrics: metrics,
     scenarios: scenarios, queue: queue, minutesPerOrder: minutesPerOrder,
-    staffing: staffing, testsPerPatient: testsPerPatient
+    staffing: staffing, testsPerPatient: testsPerPatient,
+    mcDraws: mcDraws, mcRun: mcRun, mcSummary: mcSummary, mcSummaryFrom: mcSummaryFrom,
+    mcSpearman: mcSpearman, rankCorr: rankCorr,
+    pricingGrid: pricingGrid, fxLadder: fxLadder, repricing: repricing, quantile: quantile
   };
 
   if (typeof module === "object" && module.exports) module.exports = API;

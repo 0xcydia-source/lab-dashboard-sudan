@@ -57,6 +57,7 @@
     <button role="tab" aria-selected="false" data-tab="opex">Monthly costs</button>
     <button role="tab" aria-selected="false" data-tab="assumptions">Assumptions</button>
     <button role="tab" aria-selected="false" data-tab="monthly">Monthly results</button>
+    <button role="tab" aria-selected="false" data-tab="quant">Risk &amp; Monte Carlo</button>
     <button role="tab" aria-selected="false" data-tab="plan">Feasibility study</button>
   </div>
 
@@ -381,8 +382,68 @@
     </div>
 
     <div class="card">
+      <h2>Uncertainty - what the Monte Carlo should draw</h2>
+      <p class="sub">Set how wide each driver should vary. A value of 0 removes that driver from the simulation.</p>
+      <div class="fields">
+        <div class="field">
+          <label for="d-vol">Demand volatility (sigma, lognormal)</label>
+          <input type="number" id="d-vol" data-dist="vol_sigma" min="0" max="0.8" step="0.01">
+          <span class="hint">0.22 = the 80% band is roughly 0.75x - 1.33x of your volume</span>
+        </div>
+        <div class="field">
+          <label for="d-fx">SDG depreciation: average per year</label>
+          <input type="number" id="d-fx" data-dist="fx_drift_mean" min="-0.3" max="1.5" step="0.01">
+        </div>
+        <div class="field">
+          <label for="d-fx-sigma">SDG depreciation: volatility</label>
+          <input type="number" id="d-fx-sigma" data-dist="fx_drift_sigma" min="0" max="0.6" step="0.01">
+        </div>
+        <div class="field">
+          <label for="d-price">Price realization volatility</label>
+          <input type="number" id="d-price" data-dist="price_sigma" min="0" max="0.4" step="0.005">
+          <span class="hint">Discounting and leakage beyond the fixed assumptions</span>
+        </div>
+        <div class="field">
+          <label for="d-vc">Reagent cost volatility</label>
+          <input type="number" id="d-vc" data-dist="vc_sigma" min="0" max="0.6" step="0.005">
+        </div>
+        <div class="field">
+          <label for="d-opex">Fixed cost volatility</label>
+          <input type="number" id="d-opex" data-dist="opex_sigma" min="0" max="0.4" step="0.005">
+        </div>
+        <div class="field">
+          <label for="d-tpp">Tests-per-patient volatility</label>
+          <input type="number" id="d-tpp" data-dist="tpp_sigma" min="0" max="0.5" step="0.005">
+        </div>
+        <div class="field">
+          <label for="d-pass">FX pass-through volatility</label>
+          <input type="number" id="d-pass" data-dist="pass_sigma" min="0" max="0.4" step="0.005">
+        </div>
+        <div class="field">
+          <label for="d-draws">Simulations to run</label>
+          <select id="d-draws" data-dist="draws">
+            <option value="500">500 (fast)</option>
+            <option value="2000">2,000 (recommended)</option>
+            <option value="5000">5,000 (slow, smoother)</option>
+            <option value="10000">10,000 (slowest)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="d-seed">Random seed</label>
+          <input type="number" id="d-seed" data-dist="seed" min="1" step="1">
+          <span class="hint">Same seed = same draw sequence, so a rerun reproduces a result</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
       <h2>Additional cost percentages</h2>
       <div class="fields">
+        <div class="field">
+          <label for="reagent-fx">Cost of hard-currency access</label>
+          <input type="number" id="reagent-fx" data-bind="A.reagent_fx_beta" min="0" max="1" step="0.05">
+          <span class="hint">0 = reagent basket stays a pure USD cost. Raise it only if your distributor charges above spot when the pound falls.</span>
+        </div>
         <div class="field">
           <label for="freight">Freight and clearance (% of equipment)</label>
           <input type="number" id="freight" data-bind="freight" min="0" max="0.6" step="0.01">
@@ -443,6 +504,102 @@
                 <th class="num">Y1 EBITDA</th><th class="num">Y2 EBITDA</th>
                 <th class="num">Payback</th><th class="num">Cash need</th><th class="num">NPV</th></tr>
           </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ----------------------------------------------------------- tab: quant -->
+  <section data-panel="quant" hidden>
+    <div class="note info">
+      A single-point model (one volume, one price, one exchange rate) hides the real question:
+      <strong>what is the chance the outcome is worse than I think?</strong> This tab runs the whole
+      model thousands of times with your assumptions varied, and reports the distribution.
+      Change the widths in <a href="#" data-goto="assumptions">Assumptions</a>.
+    </div>
+
+    <section class="kpis" id="qkpis" aria-label="Monte Carlo results"></section>
+
+    <div class="card">
+      <div class="cardhead">
+        <h2>Simulation control</h2>
+        <button class="btn primary" id="btn-mc">Run simulation</button>
+      </div>
+      <p class="sub" id="mc-status">Runs automatically when you open this tab.</p>
+      <div class="tw only-wide">
+        <table class="tbl" id="mc-table">
+          <thead><tr><th>Measure</th><th class="num">10th percentile</th><th class="num">Median</th>
+            <th class="num">90th percentile</th><th class="num">What it means</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="mc-cards" class="stack-cards"></div>
+    </div>
+
+    <div class="grid c2">
+      <div class="card">
+        <h2>Distribution of net present value</h2>
+        <p class="sub">Every simulation, 36 months, 22% discount rate</p>
+        <div id="ch-mc" class="chart tall"></div>
+        <p class="chart-note" id="mc-note"></p>
+      </div>
+      <div class="card">
+        <h2>What actually drives the result</h2>
+        <p class="sub">Rank correlation between each uncertain driver and NPV</p>
+        <div id="ch-mcrho"></div>
+        <p class="chart-note">The one-at-a-time tornado holds everything else fixed. This shows what matters when everything moves at once.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Exchange-rate exposure</h2>
+      <p class="sub">How the result moves as the pound slides, with disciplined repricing versus a slow list</p>
+      <div id="ch-fx" class="chart tall"></div>
+      <div class="legend">
+        <span><i style="background:#12507a"></i>Disciplined repricing (most of the move, short lag)</span>
+        <span><i style="background:#a3261f"></i>Slow list (55% passed through, 3-month lag)</span>
+      </div>
+      <p class="chart-note" id="fx-note"></p>
+    </div>
+
+    <div class="grid c2">
+      <div class="card">
+        <h2>Price required at each volume</h2>
+        <p class="sub">Average price per order that covers fixed costs, wages and service</p>
+        <div class="tw only-wide">
+          <table class="tbl" id="price-grid">
+            <thead><tr><th class="num">Orders/day</th><th class="num">Price needed</th>
+              <th class="num">Your average</th><th class="num">Headroom</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="price-grid-cards" class="stack-cards"></div>
+      </div>
+
+      <div class="card">
+        <h2>Repricing policy</h2>
+        <p class="sub">Cost of letting the price list go stale</p>
+        <div class="tw only-wide">
+          <table class="tbl" id="repricing-table">
+            <thead><tr><th class="num">List age (months)</th><th class="num">NPV 22%</th>
+              <th class="num">Month-12 EBITDA</th><th class="num">Payback</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div id="repricing-cards" class="stack-cards"></div>
+        <p class="chart-note" id="repricing-note"></p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Scenarios - full comparison</h2>
+      <p class="sub">Same inputs, three coherent futures</p>
+      <div class="tw only-wide">
+        <table class="tbl" id="quant-scenario-table">
+          <thead><tr><th>Scenario</th><th class="num">Y1 revenue</th><th class="num">Y1 EBITDA</th>
+            <th class="num">Y2 EBITDA</th><th class="num">Payback</th><th class="num">Cash needed</th>
+            <th class="num">NPV 22%</th><th class="num">Break-even</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
