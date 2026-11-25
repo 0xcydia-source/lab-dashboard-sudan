@@ -1157,3 +1157,94 @@ html[dir="ltr"] .tcard-f { flex-direction: row; }
 .study-inputs > summary:hover { background: var(--line-2); }
 .study-inputs .card:first-of-type { margin-top: 12px; }
 @media print { .study-inputs { display: none !important; } }
+
+/* ==========================================================================
+   Device catalogue — pictures, prices, provenance
+   ========================================================================== */
+.dev-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 14px;
+  margin-top: 14px;
+}
+.devcard {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow .15s, border-color .15s;
+}
+.devcard:hover { box-shadow: var(--shadow-lg); border-color: #c9d4de; }
+.devcard.in { border-color: var(--navy); box-shadow: 0 0 0 1px var(--navy) inset; }
+.devpic {
+  height: 150px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #fbfcfe, #f2f5f9);
+  border-bottom: 1px solid var(--line-2);
+  padding: 10px;
+}
+.devpic img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: contrast(1.03);
+}
+.devpic-ph {
+  font-size: 34px;
+  color: #c3ced9;
+}
+.devbody { padding: 12px 13px 13px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.devbody h3 { margin: 0; font-size: 13.5px; color: var(--navy-d); line-height: 1.35; }
+.devmodel { margin: 0; font-size: 12px; color: var(--ink-2); font-weight: 600; }
+.devspecs { margin: 0; font-size: 11.5px; color: var(--ink-3); line-height: 1.45; min-height: 2.6em; }
+.devmoney {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 4px;
+}
+.devmoney b { font-size: 17px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.devmoney span { font-size: 11px; color: var(--ink-3); }
+.devmoney .dev-exw { margin-inline-start: auto; }
+.devtags { display: flex; gap: 4px; flex-wrap: wrap; }
+.devtests { margin: 0; font-size: 11px; color: var(--ink-3); }
+.dev-toggle { margin-top: 6px; width: 100%; }
+.dev-alt { margin-top: 4px; }
+.dev-alt > summary {
+  cursor: pointer;
+  font-size: 11.5px;
+  color: var(--navy);
+  list-style: none;
+  padding: 4px 0;
+}
+.dev-alt > summary::-webkit-details-marker { display: none; }
+.dev-alt > summary::before { content: "⇄ "; }
+.dev-altbtn {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  font: inherit;
+  font-size: 12px;
+  text-align: start;
+  padding: 7px 9px;
+  margin: 4px 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fafbfd;
+  cursor: pointer;
+  align-items: center;
+}
+.dev-altbtn:hover { border-color: var(--navy); background: #f2f7fb; }
+.dev-altbtn.open { border-inline-start: 3px solid var(--green); }
+@media (max-width: 640px) {
+  .dev-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+  .devpic { height: 110px; }
+  .devbody { padding: 10px; }
+  .devmoney b { font-size: 15px; }
+}

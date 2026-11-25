@@ -1,0 +1,12 @@
+{
+ "hba1c": "dev/hba1c.jpg",
+ "generator": "dev/generator.jpg",
+ "cbc_mindray_bc20s": "dev/cbc_mindray_bc20s.jpg",
+ "water": "dev/water.jpg",
+ "ups": "dev/ups.jpg",
+ "avr": "dev/avr.jpg",
+ "cbc_biobase": "dev/cbc_biobase.jpg",
+ "chem_biobase": "dev/chem_biobase.jpg",
+ "centrifuge": "dev/centrifuge.jpg",
+ "microscope": "dev/microscope.jpg"
+}

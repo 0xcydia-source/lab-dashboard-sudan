@@ -59,6 +59,8 @@
   var mc = null;            // last Monte Carlo result set
   var mcDirty = true;       // inputs moved since the last run
   var mcBusy = false;
+  var LAST_SAVE = null;
+  var SUPPRESS_AUTOSAVE = false;   // set while the app rewrites state on purpose
 
   function EMPTY_PLAN() {
     return { name: "", location: "", owner: "", date: "", area: "", notes: "",
@@ -147,20 +149,24 @@
 
   var saveTimer = null;
   function save() {
+    if (SUPPRESS_AUTOSAVE) return;
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
       try {
         localStorage.setItem(STORE, JSON.stringify(state));
         var el = $("#save-state");
-        el.textContent = "Saved";
+        if (!el) return;
+        LAST_SAVE = new Date();
+        el.textContent = "Saved " + LAST_SAVE.toLocaleTimeString("en-GB",
+          { hour: "2-digit", minute: "2-digit", second: "2-digit" });
         el.className = "pill g";
-        setTimeout(function () {
-          el.textContent = "Saved automatically";
-          el.className = "pill";
-        }, 1400);
+        el.title = "Stored in this browser (localStorage). Nothing is uploaded.";
       } catch (e) {
-        $("#save-state").textContent = "Save failed";
-        $("#save-state").className = "pill r";
+        var el2 = $("#save-state");
+        if (el2) {
+          el2.textContent = "Save failed - storage full or blocked";
+          el2.className = "pill r";
+        }
       }
     }, 250);
   }
@@ -398,11 +404,12 @@
     var tb = $("#capex1-table tbody");
     tb.innerHTML = state.capex_p1.map(function (c, i) {
       return "<tr>" +
-        '<td><input class="wide" type="text" data-cx="1" data-i="' + i + '" data-f="item" value="' + esc(c.item) + '"></td>' +
+        '<td><input class="wide" type="text" data-cx="1" data-i="' + i + '" data-f="item" value="' + esc(c.item_en || c.item) + '"></td>' +
         '<td class="num"><input type="number" min="0" step="1" data-cx="1" data-i="' + i + '" data-f="qty" value="' + c.qty + '"></td>' +
         '<td class="num"><input type="number" min="0" step="25" data-cx="1" data-i="' + i + '" data-f="unit" value="' + c.unit + '"></td>' +
-        '<td class="num">' + usd(c.qty * c.unit) + "</td>" +
-        '<td><span class="pill">' + (c.src === "own" ? "your quote" : "estimate") + "</span></td>" +
+        '<td class="num">' + usd(c.total != null ? c.total : c.qty * c.unit) + "</td>" +
+        '<td><span class="pill ' + (c.kind === "quote" ? "a" : c.kind === "sourced" ? "g" : "") + '">' +
+          (c.kind === "quote" ? "owner quote" : c.kind === "sourced" ? "vendor price" : "estimate") + "</span></td>" +
         '<td class="num"><button class="btn sm ghost" data-del="capex_p1" data-i="' + i + '" title="Delete">✕</button></td>' +
         "</tr>";
     }).join("");
@@ -437,7 +444,7 @@
       c1.innerHTML = state.capex_p1.map(function (c, i) {
         return '<div class="tcard"><div class="tcard-h">' +
           '<input class="nameinput" type="text" data-cx="1" data-i="' + i +
-            '" data-f="item" value="' + esc(c.item) + '">' +
+            '" data-f="item" value="' + esc(c.item_en || c.item) + '">' +
           '<button class="btn sm ghost" data-del="capex_p1" data-i="' + i + '" title="Delete">✕</button></div>' +
           '<div class="tcard-g">' +
             '<div class="field"><label>Qty</label><input type="number" min="0" step="1" ' +
@@ -997,7 +1004,7 @@
     mcDirty = true;
     // localStorage write is ~1 KB of JSON; do it off the typing path
     clearTimeout(saveTimer2);
-    saveTimer2 = setTimeout(save, 400);
+    saveTimer2 = setTimeout(save, 180);
     if (raf) cancelAnimationFrame(raf);
     var PERF = window.__perf;
     var t0 = PERF ? performance.now() : 0;
@@ -1352,7 +1359,7 @@
       p.hidden = p.getAttribute("data-panel") !== name;
     });
     if (name === "tests") renderMenu();
-    if (name === "capex") renderCapex();
+    if (name === "capex") { renderDevices(); renderCapex(); }
     if (name === "opex") renderOpex();
     if (name === "monthly") renderMonthly();
     if (name === "assumptions") syncAssumptionInputs();
@@ -1515,6 +1522,236 @@
     });
   }
 
+
+  /* ============================================================== DEVICES
+   * The equipment tab. Every device comes from window.LabDevices, which is
+   * generated from device_catalogue.py — the same table the Python report and
+   * the Excel export read. Choosing a different model swaps the state row, and
+   * the whole model reprices.
+   * ==================================================================== */
+  var DEV = window.LabDevices || { devices: [], price_list: [], test_labels: {} };
+
+  function devPrice(d, exw) {
+    // same arithmetic as device_catalogue.landed_receipt
+    if (d.incoterm === "delivered") return { total: exw, chain: null };
+    var scale = Math.sqrt(exw / 2765);
+    var fr = 200 * scale, cl = 100 * scale;
+    var mi = d.key === "cbc" ? 414 : 0;
+    var services = Math.round(exw * 0.07), customs = Math.round(exw * 0.10);
+    return { total: exw + fr + cl + mi + services + customs,
+             chain: { freight: fr, clearance: cl, ministry: mi,
+                      services: services, customs: customs } };
+  }
+
+  function stateHasDevice(key) {
+    return (state.capex_p1 || []).some(function (r) { return r.key === key; });
+  }
+
+  function deviceInSlot(slot) {
+    return (state.capex_p1 || []).filter(function (r) { return r.slot === slot; });
+  }
+
+  function renderDevices() {
+    var grid = $("#device-grid");
+    if (!grid) return;
+    var openOnly = $("#dev-openonly") && $("#dev-openonly").checked;
+    var sourceOnly = $("#dev-sourceonly") && $("#dev-sourceonly").checked;
+
+    // one tile per slot: the alternative models are behind the tile
+    var slots = {};
+    (DEV.devices || []).forEach(function (d) {
+      var slot = d.slot || d.key;
+      (slots[slot] = slots[slot] || []).push(d);
+    });
+    var chosenKeys = {};
+    (state.capex_p1 || []).forEach(function (r) {
+      if (r.slot && r.key) chosenKeys[r.slot] = r.key;
+    });
+
+    var html = "";
+    Object.keys(slots).forEach(function (slot) {
+      var cands = slots[slot];
+      var chosen = cands.filter(function (c) { return c.key === chosenKeys[slot]; })[0] || cands[0];
+      var inKit = !!chosenKeys[slot];
+      var alts = cands.filter(function (c) { return c.key !== chosen.key; })
+        .filter(function (c) { return !openOnly || c.open_system; })
+        .filter(function (c) { return !sourceOnly || c.kind === "quote" || c.kind === "sourced"; });
+      if (openOnly && !chosen.open_system) return;
+      if (sourceOnly && chosen.kind === "estimate") return;
+
+      var exw = chosen.price_usd * (chosen.qty || 1);
+      var p = devPrice(chosen, exw);
+      var kindCls = chosen.kind === "quote" ? "a" : chosen.kind === "sourced" ? "g" : "";
+      html += '<article class="devcard' + (inKit ? " in" : "") + '" data-slot="' + esc(slot) + '">' +
+        '<div class="devpic">' +
+          (chosen.img
+            ? '<img src="assets/' + esc(chosen.img) + '" alt="' + esc(chosen.name) + '" loading="lazy">'
+            : '<span class="devpic-ph" aria-hidden="true">' + glyphFor(chosen.cls) + "</span>") +
+        "</div>" +
+        "<div class='devbody'>" +
+          "<h3>" + esc(chosen.name) + "</h3>" +
+          '<p class="devmodel">' + esc(chosen.brand || "") + " " + esc(chosen.model) + "</p>" +
+          '<p class="devspecs">' + esc(chosen.specs || "") + "</p>" +
+          '<div class="devmoney"><b>' + usd(p.total) + "</b><span>landed</span>" +
+            '<span class="dev-exw">' + usd(exw) + " EXW</span></div>" +
+          '<div class="devtags">' +
+            '<span class="pill ' + kindCls + '">' + esc(kindLabel(chosen.kind)) + "</span>" +
+            '<span class="pill ' + (chosen.open_system ? "g" : "r") + '">' +
+              (chosen.open_system ? "open reagents" : "closed reagents") + "</span>" +
+            (chosen.tier === "owner" ? '<span class="pill a">owner quote</span>' : "") +
+          "</div>" +
+          (chosen.tests && chosen.tests.length
+            ? '<p class="devtests">Runs: ' + chosen.tests.map(function (t) {
+                return esc((DEV.test_labels || {})[t] || t);
+              }).join(" · ") + "</p>"
+            : "") +
+          (alts.length
+            ? '<details class="dev-alt"><summary>' + alts.length + " alternative" +
+              (alts.length > 1 ? "s" : "") + "</summary>" + alts.map(function (a) {
+                var ae = a.price_usd * (a.qty || 1), ap = devPrice(a, ae);
+                return '<button class="dev-altbtn' + (a.open_system ? " open" : "") +
+                  '" data-pick="' + esc(a.key) + '" data-slot="' + esc(slot) + '">' +
+                  "<span>" + esc(a.brand || "") + " " + esc(a.model) + "</span>" +
+                  "<span>" + usd(ap.total) + " landed</span>" +
+                  (a.kind === "estimate" ? '<span class="pill">estimate</span>' : "") +
+                  "</button>";
+              }).join("") + "</details>"
+            : "") +
+          '<button class="btn sm ' + (inKit ? "" : "primary") + ' dev-toggle" data-toggle="' +
+            esc(chosen.key) + '" data-slot="' + esc(slot) + '">' +
+            (inKit ? "Remove from kit" : "Add to kit") + "</button>" +
+        "</div></article>";
+    });
+    grid.innerHTML = html || '<p class="empty">No device matches those filters.</p>';
+
+    var cnt = $("#dev-count");
+    if (cnt) cnt.textContent = (state.capex_p1 || []).length + " lines in the kit";
+    renderDeviceKpis();
+    renderChain();
+  }
+
+  function glyphFor(cls) {
+    return { analyzer: "◆", essential: "●", power: "⚡", it: "▣",
+             safety: "✚", fitout: "▤", stock: "▦", contingency: "◈" }[cls] || "●";
+  }
+  function kindLabel(k) {
+    return { quote: "owner quote", sourced: "vendor price", estimate: "estimate",
+             rule: "rule" }[k] || k;
+  }
+
+  function renderDeviceKpis() {
+    var host = $("#devkpis");
+    if (!host) return;
+    var rows = (state.capex_p1 || []).filter(function (r) { return r.cls !== "stock"; });
+    var exw = 0, landed = 0, closed = 0, opensys = 0, analyses = 0;
+    rows.forEach(function (r) {
+      var e = r.exw != null ? r.exw : (r.qty || 0) * (r.unit || 0);
+      exw += e; landed += (r.total != null ? r.total : e);
+      if (r.open_system === false) closed++; else if (r.open_system) opensys++;
+      if (r.cls === "analyzer") analyses++;
+    });
+    var est = (state.capex_p1 || []).filter(function (r) { return r.kind === "estimate"; }).length;
+    var cards = [
+      { k: "Kit, EXW", v: usd(exw), s: analyses + " analyzers", c: "" },
+      { k: "Kit, landed", v: usd(landed), s: (exw ? nf(landed / exw, 2) : "—") + "× purchase price", c: "" },
+      { k: "Import overhead", v: usd(Math.max(0, landed - exw)),
+        s: "freight, clearance, ministry, 7%, 10%", c: "warn" },
+      { k: "Open vs closed", v: opensys + " / " + closed,
+        s: "open-system devices / reagent-locked", c: closed > opensys ? "warn" : "good" },
+      { k: "Estimates left", v: String(est),
+        s: est ? "replace with a written quote" : "all lines sourced", c: est ? "warn" : "good" },
+      { k: "Full phase 1", v: usd(results.m.p1), s: "incl. stock + contingency", c: "" }
+    ];
+    host.innerHTML = cards.map(function (c) {
+      return '<div class="kpi ' + c.c + '"><span class="k">' + esc(c.k) + "</span>" +
+        '<span class="v">' + esc(c.v) + "</span><span class='d'>" + esc(c.s) + "</span></div>";
+    }).join("");
+  }
+
+  function renderChain() {
+    var tb = $("#chain-table tbody");
+    if (!tb) return;
+    var chain = results.base.capex.chain || {};
+    var owner = (DEV.chain_example || {});
+    var labels = [
+      ["freight", "Freight to Port Sudan", "One carton per device; scales with the square root of value"],
+      ["clearance", "Clearance and handling", "Fixed per shipment, not per device"],
+      ["ministry", "Ministry of Trade + Pharmacy & Poisons", "Per registration of the shipment"],
+      ["services", "Services charge (7% of purchase)", "The owner's supplier line"],
+      ["customs", "Customs duty (10% of purchase)", "10% of the invoice, per the owner's sheet"]
+    ];
+    tb.innerHTML = labels.map(function (l) {
+      var a = owner[l[0]] || 0, b = chain[l[0]] || 0;
+      return "<tr><td>" + esc(l[1]) + '</td><td class="num">' + usd(a) +
+        '</td><td class="num">' + usd(b) + "</td><td>" + esc(l[2]) + "</td></tr>";
+    }).join("") +
+      "<tr class='total'><td>Landed total</td><td class='num'>" + usd(owner.total) +
+      "</td><td class='num'>" + usd(results.base.capex.landed_capital) + "</td><td></td></tr>";
+    var note = $("#chain-note");
+    if (note) {
+      note.textContent = "The owner's four-machine quote of $2,765 lands at $" +
+        nf(owner.total) + " (" + nf(owner.multiplier, 2) + "×). " +
+        "That multiplier, not a guessed freight percentage, is what prices this kit.";
+    }
+  }
+
+  function pickDevice(key, slot) {
+    var d = (DEV.devices || []).filter(function (x) { return x.key === key; })[0];
+    if (!d) return;
+    // remove any other model in the same slot, then replace or add this one
+    var idx = -1;
+    for (var i = 0; i < state.capex_p1.length; i++) {
+      if (state.capex_p1[i].key === key) { idx = i; break; }
+    }
+    state.capex_p1 = state.capex_p1.filter(function (r) { return r.slot !== slot; });
+    var exw = d.price_usd * (d.qty || 1);
+    var p = devPrice(d, exw);
+    var row = {
+      key: d.key, slot: d.slot || d.key, item: d.name_ar || d.name, item_en: d.name,
+      model: d.model, brand: d.brand, qty: d.qty || 1, exw: exw,
+      unit: p.total, total: p.total, src: d.src, kind: d.kind, note: d.note,
+      specs: d.specs, img: d.img || "", cls: d.cls, tier: d.tier,
+      open_system: d.open_system, tests: d.tests || [], chain: p.chain
+    };
+    if (idx >= 0 && idx < state.capex_p1.length) state.capex_p1.splice(idx, 0, row);
+    else state.capex_p1.push(row);
+    onChange({ full: true });
+    compute(true);
+    renderKpis();
+    renderDevices();
+    renderCapex();
+    if (currentTab() === "plan") renderReport();
+    save();
+  }
+
+  function wireDevices() {
+    document.addEventListener("click", function (ev) {
+      var pick = ev.target.closest("[data-pick]");
+      if (pick) {
+        ev.preventDefault();
+        pickDevice(pick.getAttribute("data-pick"), pick.getAttribute("data-slot"));
+        return;
+      }
+      var tog = ev.target.closest("[data-toggle]");
+      if (tog) {
+        ev.preventDefault();
+        var slot = tog.getAttribute("data-slot");
+        var key = tog.getAttribute("data-toggle");
+        var has = deviceInSlot(slot).length;
+        if (has) {
+          state.capex_p1 = state.capex_p1.filter(function (r) { return r.slot !== slot; });
+          onChange({ full: true }); renderDevices(); renderCapex(); save();
+        } else {
+          pickDevice(key, slot);
+        }
+      }
+    });
+    ["dev-openonly", "dev-sourceonly"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener("change", renderDevices);
+    });
+  }
+
   /* ------------------------------------------------------------------ study
    * The Feasibility-study tab is the deliverable: a complete, printable study
    * built from the numbers currently on screen. It is not a summary that points
@@ -1631,9 +1868,9 @@
 
     /* ---- capex ---- */
     var rowsCapex = st.capex_p1.map(function (c) {
-      return "<tr><td>" + esc(c.item) + "</td><td class='num'>" + nf(c.qty) +
-        "</td><td class='num'>" + usd(c.unit) + "</td><td class='num'>" +
-        usd(c.qty * c.unit) + "</td></tr>";
+      return "<tr><td>" + esc(c.item_en || c.item) + "</td><td class='num'>" + nf(c.qty) +
+        "</td><td class='num'>" + usd(c.exw != null ? c.exw : c.qty * c.unit) +
+        "</td><td class='num'>" + usd(c.total != null ? c.total : c.qty * c.unit) + "</td></tr>";
     }).join("");
     var footCapex =
       "<tr><td>Equipment subtotal</td><td></td><td></td><td class='num'>" + usd(cap.hardware) + "</td></tr>" +
@@ -1865,6 +2102,32 @@
         "today's value, and the whole 36-month model recomputed.</p>" +
       "<div id='rpt-tornado'></div>" +
 
+      /* 8b. the owner's own price board ---------------------------------- */
+      (function () {
+        var pl = (window.LabDevices || {}).price_list || [];
+        if (!pl.length) return;
+        return "<h2 id='rpt-s8b'>8b. Your own price board vs this model</h2>" +
+          "<p>This is the price list from the clinic's board, in Sudanese pounds, next to what " +
+          "the model charges. The board was written on an exchange rate of about " +
+          nf((window.LabDevices || {}).price_list_fx_at_photo || 2500) +
+          " SDG per dollar; at today's rate the same numbers are worth about a fifth of that. " +
+          "The last column is the same price carried to today's rate.</p>" +
+          tbl(["Test", "On the board (SDG)", "Means today ($)", "The model charges ($)",
+               "Repriced list (SDG)"],
+              pl.map(function (r) {
+                var menu = (st.menu || []).filter(function (m) {
+                  return m.key === r.menu;
+                })[0];
+                return "<tr><td>" + esc(r.label) + "</td><td class='num'>" + nf(r.sdg) +
+                  "</td><td class='num'>" + usd(r.usd_as_written, 2) +
+                  "</td><td class='num'>" + (menu ? usd(menu.price_usd, 2) : "—") +
+                  "</td><td class='num'>" + nf(Math.round(r.sdg_repriced)) + "</td></tr>";
+              }).join("")) +
+          "<p class='rpt-callout'><b>Read this before printing any price list:</b> the board's " +
+          "CBC at 12,000 SDG is $1.00 at today's rate, and the CBC reagents alone cost about " +
+          "$1.20. Re-quote the whole board on today's rate, or the lab sells below cost.</p>";
+      })() +
+
       /* 9 ------------------------------------------------------------- */
       "<h2 id='rpt-s9'>9. Currency exposure and repricing</h2>" +
       "<p>The lab charges in Sudanese pounds and buys reagents in dollars. The menu is priced in " +
@@ -2033,8 +2296,10 @@
     var empty = $("#btn-empty");
     if (empty) empty.addEventListener("click", function () {
       if (!confirm("Start from a blank sheet? All current data will be deleted.")) return;
+      SUPPRESS_AUTOSAVE = true;
       state = blankState();
       localStorage.setItem(STORE, JSON.stringify(state));
+      SUPPRESS_AUTOSAVE = false;
       compute(true);
       renderKpis();
       var b = $('#tabs button[data-tab="capex"]');
@@ -2049,8 +2314,10 @@
 
     $("#btn-reset").addEventListener("click", function () {
       if (!confirm("Restore the worked example? Your edits will be lost.")) return;
+      SUPPRESS_AUTOSAVE = true;
       state = defaultsState();
       localStorage.removeItem(STORE);
+      SUPPRESS_AUTOSAVE = false;
       onChange();
       renderTab(currentTab());
     });
@@ -2101,6 +2368,7 @@
     wireToolbar();
     wireAssumptions();
     wireRowActions();
+    wireDevices();
     wireCardInputs();
     wirePlanInputs();
     // The study is the deliverable, so it opens first; the dashboard tabs are
@@ -2114,6 +2382,16 @@
   }
 
   /* deep links: #tests, #quant, #plan … switch tabs without a reload */
+  /* flush the pending save when the tab is hidden or closed */
+  ["visibilitychange", "pagehide", "beforeunload"].forEach(function (evt) {
+    window.addEventListener(evt, function () {
+      if (SUPPRESS_AUTOSAVE) return;      // do not resurrect a cleared state
+      clearTimeout(saveTimer);
+      clearTimeout(saveTimer2);
+      try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) {}
+    });
+  });
+
   window.addEventListener("hashchange", function () {
     var name = (location.hash || "").replace("#", "");
     if (/^(overview|tests|capex|opex|assumptions|monthly|quant|plan)$/.test(name)) {

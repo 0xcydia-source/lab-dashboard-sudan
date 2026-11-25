@@ -50,7 +50,8 @@
     <button class="btn ghost" id="btn-reset">Restore example</button>
     <input type="file" id="file-input" accept="application/json" class="visually-hidden">
     <a class="btn ghost" href="out/نموذج_المعمل_القابل_للتعديل.xlsx" download>Excel model</a>
-    <span class="pill" id="save-state" style="margin-inline-start:auto">Saved automatically</span>
+    <span class="pill" id="save-state" style="margin-inline-start:auto"
+          title="Stored in this browser (localStorage). Nothing is uploaded.">Autosave on</span>
   </div>
 
   <div class="tabs" role="tablist" id="tabs">
@@ -168,19 +169,46 @@
   <!-- ----------------------------------------------------------- tab: capex -->
   <section data-panel="capex" hidden>
     <div class="note info">
-      These are purchase prices <strong>before</strong> freight and clearance. Edit any line,
-      delete or add your own. Freight, install and contingency come from the Assumptions tab.
+      Every price here is <strong>either the owner's quote or a live vendor price with its source</strong>.
+      The landed cost of each line uses the owner's own six-line chain
+      (purchase + freight 200 + clearance 100 + ministry 414 + 7% services + 10% customs = <strong>1.43×</strong>).
+      Swap a device, and the whole study reprices itself.
+    </div>
+
+    <section class="kpis" id="devkpis" aria-label="Equipment summary"></section>
+
+    <div class="card">
+      <div class="cardhead">
+        <h2>The kit <span class="pill" id="dev-count"></span></h2>
+        <span style="display:flex;gap:6px;flex-wrap:wrap">
+          <label class="switch"><input type="checkbox" id="dev-openonly"> Open-system only</label>
+          <label class="switch"><input type="checkbox" id="dev-sourceonly"> Quoted prices only</label>
+        </span>
+      </div>
+      <p class="sub">Click a device to swap it for an alternative. Closed-system machines lock you
+        into one vendor's reagents; open-system ones accept any brand.</p>
+      <div id="device-grid" class="dev-grid"></div>
     </div>
 
     <div class="card">
-      <h2>Phase 1 - opening</h2>
-      <p class="sub">Equipment and set-up required to open</p>
+      <h2>The landed-cost receipt</h2>
+      <p class="sub">What the owner's chain adds on top of the purchase price, line by line</p>
+      <div class="tw"><table class="tbl" id="chain-table">
+        <thead><tr><th>Line</th><th class="num">On the owner's $2,765 quote</th>
+          <th class="num">On this kit</th><th>Why it exists</th></tr></thead>
+        <tbody></tbody></table></div>
+      <p class="chart-note" id="chain-note"></p>
+    </div>
+
+    <div class="card">
+      <h2>Editable line items - phase 1 (opening)</h2>
+      <p class="sub">Every row is a real number you can overwrite. <em>Kind</em> tells you where it came from.</p>
       <div id="capex1-cards" class="stack-cards"></div>
       <div class="tw only-wide">
         <table class="tbl" id="capex1-table">
           <thead>
-            <tr><th>Item</th><th class="num">Qty</th><th class="num">Unit price ($)</th>
-                <th class="num">Total</th><th>Source</th><th></th></tr>
+            <tr><th>Item</th><th class="num">Qty</th><th class="num">EXW ($)</th>
+                <th class="num">Landed ($)</th><th>Kind</th><th></th></tr>
           </thead>
           <tbody></tbody>
           <tfoot></tfoot>
@@ -665,6 +693,9 @@
   </section>
 
   <div class="note" style="margin-top:6px">
+    <strong>Autosave:</strong> every edit is written to this browser as you type (see the
+    timestamp next to the toolbar) and survives a refresh. Export data (JSON) if you want a
+    copy you can move to another machine. &nbsp;·&nbsp;
     <strong>Note:</strong> this is a decision model, not a quotation. Prices you entered are yours;
     anything marked "estimate" must be replaced by a written quote before you commit money.
     Full methodology in the <a href="study.html">original report</a>.
@@ -676,6 +707,7 @@
   <p class="small">Your data stays in this browser. No account, no upload.</p>
 </footer>
 
+<script src="assets/devices.js"></script>
 <script src="assets/engine.js"></script>
 <script src="assets/app.js"></script>
 </body>

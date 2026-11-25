@@ -46,28 +46,72 @@
     ["elisa", "ELISA (confirmation / viral hepatitis)", 8.1, 2.5, 16.0, 0.01, 2, "96-well plate"]
   ];
 
-  var CAPEX_P1 = [
-    ["Mindray BC-21s CBC analyzer (new, 6-month warranty)", 1, 2900, "own"],
-    ["Semi-auto chemistry analyzer (ELHODA 880 / HC-80+)", 1, 1250, "own"],
-    ["Centrifuge, 6-place", 1, 65, "own"],
-    ["Binocular LED microscope + 100x oil objective", 1, 210, "own"],
-    ["ESR stand + timer", 1, 70, "est"],
-    ["Digital water bath", 1, 120, "est"],
-    ["Vortex mixer", 1, 35, "est"],
-    ["Rotator for latex tests", 1, 45, "est"],
-    ["Analytical balance 0.001 g", 1, 180, "est"],
-    ["Reagent fridge 350 L, glass door", 1, 600, "est"],
-    ["Water still 4 L/h", 1, 220, "est"],
-    ["Micropipettes x3 + stand + tips", 1, 240, "est"],
-    ["Online UPS 2 kVA", 1, 250, "est"],
-    ["Voltage regulator AVR 5 kVA", 1, 120, "est"],
-    ["Generator 6-7 kVA", 1, 900, "est"],
-    ["PC + laser printer + LIS", 1, 700, "est"],
-    ["Split AC 1.5 HP x2", 1, 1000, "est"],
-    ["Furniture and fit-out, 60-80 m2", 1, 1200, "est"],
-    ["Signage + licensing + legal fees", 1, 600, "est"],
-    ["Biosafety and PPE kit", 1, 350, "est"]
-  ];
+  var DEV = (typeof window !== "undefined" ? window.LabDevices : null)
+            || (typeof require === "function" ? (function () {
+                 try { return require("./devices.js"); } catch (e) { return null; }
+               })() : null);
+
+  /* Convert one catalogue device to a CAPEX row on the owner's landed chain.
+   * Mirrors model._device_row / device_catalogue.landed_from_exw exactly. */
+  function ownerChain(purchase, opts) {
+    opts = opts || {};
+    var fr = (opts.freight != null ? opts.freight : 200) * (opts.scale != null ? opts.scale : 1);
+    var cl = (opts.clearance != null ? opts.clearance : 100) * (opts.scale != null ? opts.scale : 1);
+    var mi = (opts.ministry != null ? opts.ministry : 414) * (opts.ministryShare != null ? opts.ministryShare : 1);
+    var services = Math.round(purchase * 0.07);
+    var customs = Math.round(purchase * 0.10);
+    var total = purchase + fr + cl + mi + services + customs;
+    return { purchase: purchase, freight: fr, clearance: cl, ministry: mi,
+             services: services, customs: customs, total: total,
+             multiplier: purchase ? total / purchase : null };
+  }
+  function deviceRow(d) {
+    var exw = d.price_usd * (d.qty || 1);
+    var landed, chain = null;
+    if (d.incoterm === "delivered") {
+      landed = exw;
+    } else {
+      var scale = Math.sqrt(exw / 2765);
+      chain = ownerChain(exw, { scale: scale, ministryShare: d.key === "cbc" ? 1 : 0 });
+      // python rounds the concatenated figure to 2dp; keep the same value
+      landed = Math.round(chain.total * 100) / 100;
+    }
+    return { key: d.key, slot: d.slot, item: d.name_ar || d.name, item_en: d.name,
+             model: d.model, brand: d.brand, qty: d.qty || 1,
+             exw: exw, unit: landed, total: landed, src: d.src, kind: d.kind,
+             note: d.note, specs: d.specs, img: d.img || "", cls: d.cls,
+             tier: d.tier, open_system: d.open_system, tests: d.tests || [],
+             chain: chain };
+  }
+  function buildCapex(opts) {
+    opts = opts || {};
+    if (!DEV) return null;
+    var order = { core: 1, phase2: 2, later: 3 };
+    var limit = order[opts.tier || "core"] || 1;
+    var picks = { cbc: opts.cbc || DEV.default_cbc, chem: "chem_biobase" };
+    Object.assign(picks, opts.picks || {});
+    var slots = {};
+    DEV.devices.forEach(function (d) {
+      if (["core", "phase2", "later"].indexOf(d.tier) < 0) return;
+      if (opts.include) { if (opts.include.indexOf(d.key) < 0) return; }
+      else if ((order[d.tier] || 9) > limit) return;
+      var slot = d.slot || d.key;
+      (slots[slot] = slots[slot] || []).push(d);
+    });
+    var rows = [];
+    Object.keys(slots).forEach(function (slot) {
+      var cands = slots[slot];
+      var want = picks[slot];
+      var chosen = null;
+      for (var i = 0; i < cands.length; i++) if (cands[i].key === want) chosen = cands[i];
+      rows.push(deviceRow(chosen || cands[0]));
+    });
+    return rows;
+  }
+
+  /* Opening kit — built from site/assets/devices.js (generated from
+   * device_catalogue.py), so there is no second hand-typed price list. */
+  var CAPEX_P1 = buildCapex({ tier: "core" });
 
   var CAPEX_P2 = [
     ["Electrolyte analyzer Na/K/Cl (ISE)", 1600],
@@ -175,20 +219,37 @@
   }
 
   /* ------------------------------------------------------------------ capex */
+  /* Landed cost per line, using the OWNER'S chain (verified to sum to $3,950 on
+   * his $2,765 quote): freight 200 + clearance 100 + ministry 414 + 7% services
+   * + 10% customs. A row is either already delivered or is an EXW price that the
+   * dashboard converted at import time (rows carry `exw` and `total`). */
+  function landedOf(row) {
+    if (row && row.total != null) return row.total;
+    return (row.qty || 0) * (row.unit || 0);
+  }
+
   function capex(st, P) {
     var p = P || st.A;
-    var hw = st.capex_p1.reduce(function (s, r) { return s + (r.qty || 0) * (r.unit || 0); }, 0);
-    // round each derived line the same way the reference python model does,
-    // otherwise the report and the dashboard disagree by a dollar
-    var freight = Math.round(hw * st.freight);
-    var install = Math.round(hw * st.install);
-    var sub = hw + freight + install + st.stock_opening;
+    var hw = st.capex_p1.reduce(function (s, r) { return s + (r.exw != null ? r.exw : (r.qty || 0) * (r.unit || 0)); }, 0);
+    var landedSum = st.capex_p1.reduce(function (s, r) { return s + landedOf(r); }, 0);
+    var stock = st.stock_opening;
+    var sub = landedSum + stock;
     var cont = Math.round(sub * st.contingency);
     var p1 = Math.round((sub + cont) * p.capex_mult);
-    var p2 = Math.round(st.capex_p2.reduce(function (s, r) { return s + (r.qty || 0) * (r.unit || 0); }, 0) * p.capex_mult);
-    var p3 = Math.round(st.capex_p3.reduce(function (s, r) { return s + (r.qty || 0) * (r.unit || 0); }, 0) * p.capex_mult);
-    return { hardware: hw, freight: freight, install: install,
-             stock: st.stock_opening, contingency: cont, subtotal: sub,
+    var p2 = Math.round(st.capex_p2.reduce(function (s, r) { return s + landedOf(r) * (r.qty || 1); }, 0) * p.capex_mult);
+    var p3 = Math.round(st.capex_p3.reduce(function (s, r) { return s + landedOf(r) * (r.qty || 1); }, 0) * p.capex_mult);
+    // aggregate the per-row receipts exactly like model.capex does
+    var chain = { freight: 0, clearance: 0, ministry: 0, services: 0, customs: 0 };
+    st.capex_p1.forEach(function (r) {
+      var c = r.chain || {};
+      Object.keys(chain).forEach(function (k) { chain[k] += c[k] || 0; });
+    });
+    Object.keys(chain).forEach(function (k) { chain[k] = Math.round(chain[k] * 100) / 100; });
+    chain.overhead = Math.round((landedSum - hw) * 100) / 100;
+    return { hardware: hw, exw: hw, landed: landedSum,
+             freight: Math.round(chain.freight), install: 0,
+             chain: chain,
+             stock: stock, contingency: cont, subtotal: sub,
              p1: p1, p2_total: p2, p3_total: p3 };
   }
 
