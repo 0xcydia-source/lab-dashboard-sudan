@@ -145,11 +145,22 @@ a:hover { text-decoration: underline; }
 @media (min-width: 760px) { .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (min-width: 1060px) { .kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 /* strips with 7 cards (the budget tab) get their own even split */
-#budget-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 619px) {
+  /* four across on a phone: seven cards would eat the whole first screen */
+  #budget-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+  #budget-kpis .kpi .v { font-size: 14px; letter-spacing: -.2px; }
+  #budget-kpis .kpi .k { font-size: 9.5px; }
+  #budget-kpis .kpi .d { display: none; }
+}
+#budget-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0;
+               border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+#budget-kpis .kpi { border: 0; border-radius: 0; padding: 9px 10px 10px; }
+#budget-kpis .kpi + .kpi { border-inline-start: 1px solid var(--line-2); }
 @media (min-width: 620px) { #budget-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 @media (min-width: 1060px) { #budget-kpis { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
-#budget-kpis .kpi .v { font-size: 18px; }
-#budget-kpis .kpi .k { font-size: 10.5px; }
+#budget-kpis .kpi .v { font-size: 17px; }
+#budget-kpis .kpi .k { font-size: 10px; }
+#budget-kpis .kpi .d { font-size: 10.5px; }
 
 .kpi {
   background: var(--card);
